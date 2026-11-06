@@ -1,0 +1,1349 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Your English Study Guide with Mr. Kenj</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#18203d">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: sticky app bar + tab strip, one content column (max 1080px); games take over the column like a full index card. */
+:root{
+  --bg:#f4f6fb; --surface:#ffffff; --sunk:#e9edf6; --ink:#18203d; --muted:#5b6585; --line:#d6dcea;
+  --a:#f2b31b; --a-ink:#5a3f00; --b:#0f9e93; --b-ink:#003f3a; --c:#7a4cf0; --c-ink:#2a0f7a;
+  --accent:#2d5bff; --accent-ink:#ffffff; --good:#1c9c5b; --bad:#e2513d; --card:#fffdf4; --rule:#c9d8f2; --margin:#f19a9a;
+  --display:"Gabarito","Trebuchet MS",system-ui,sans-serif; --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px; --shadow:0 1px 2px rgba(24,32,61,.06),0 6px 20px rgba(24,32,61,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1326; --surface:#181e38; --sunk:#222a4a; --ink:#eef1fb; --muted:#a3acc9; --line:#2f385c;
+  --a-ink:#ffe39a; --b-ink:#a5f2ea; --c-ink:#d9ccff; --accent:#7d9bff; --accent-ink:#0b1030; --good:#45c983; --bad:#ff7a66;
+  --card:#1f2747; --rule:#2e3a63; --margin:#7a3b4a; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1326; --surface:#181e38; --sunk:#222a4a; --ink:#eef1fb; --muted:#a3acc9; --line:#2f385c;
+  --a-ink:#ffe39a; --b-ink:#a5f2ea; --c-ink:#d9ccff; --accent:#7d9bff; --accent-ink:#0b1030; --good:#45c983; --bad:#ff7a66;
+  --card:#1f2747; --rule:#2e3a63; --margin:#7a3b4a; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar-top{display:flex;align-items:center;gap:12px;padding-block:12px}
+.logo{width:62px;height:47px;flex:none;display:block}
+.logo .lb-body{fill:var(--ink)}
+.logo .lb-dot{fill:var(--a)}
+.logo text{fill:var(--bg);font-family:var(--display);font-weight:800}
+.brand{min-width:0;flex:1}
+.brand h1{font-size:clamp(17px,2.4vw,22px);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.chips{display:flex;gap:6px;flex:none}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:var(--sunk);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip svg{width:15px;height:15px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs a{padding:10px 14px;text-decoration:none;color:var(--muted);font-weight:700;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
+main{padding-block:24px 64px;display:grid;gap:24px}
+.banner{padding:12px 14px;border-radius:var(--r);background:var(--sunk);font-size:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:10px;font-weight:700;text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:14px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;flex:none}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn:hover{border-color:var(--ink)}
+/* hero */
+.hello{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.hello{grid-template-columns:1fr}}
+.hello h2{font-size:clamp(26px,4vw,36px)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--sunk);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+/* index card */
+.icard{background:var(--card);border-radius:var(--r);border:1px solid var(--line);position:relative;padding:18px 18px 18px 34px;
+  background-image:linear-gradient(var(--card) 46px,transparent 46px),repeating-linear-gradient(transparent 0 27px,var(--rule) 27px 28px);box-shadow:var(--shadow)}
+.icard::before{content:"";position:absolute;left:22px;top:0;bottom:0;width:2px;background:var(--margin)}
+.wotd-word{font-family:var(--display);font-size:34px;font-weight:800}
+.lvl-switch{display:flex;gap:8px;flex-wrap:wrap}
+.lvl-switch button{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 14px;font-weight:700;text-align:left}
+.lvl-switch button small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.lvl-switch button[aria-pressed="true"]{border-color:var(--lv);box-shadow:inset 0 0 0 1px var(--lv)}
+.lv-A{--lv:var(--a);--lv-ink:var(--a-ink)} .lv-B{--lv:var(--b);--lv-ink:var(--b-ink)} .lv-C{--lv:var(--c);--lv-ink:var(--c-ink)}
+.lesson{display:flex;flex-direction:column;gap:8px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px;min-width:0;position:relative;overflow:hidden}
+.lesson::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--lv)}
+.lesson:hover{border-color:var(--lv)}
+.lesson .num{font-family:var(--display);font-weight:800;color:var(--lv-ink);font-size:13px;letter-spacing:.06em}
+.lesson h3{font-size:18px}
+.cap::first-letter,.lesson h3::first-letter{text-transform:uppercase}
+.lesson p{margin:0;font-size:13px;color:var(--muted)}
+.meter{height:6px;border-radius:6px;background:var(--sunk);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--lv,var(--accent));border-radius:6px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;background:var(--sunk)}
+.pill.good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.pill.warn{background:color-mix(in srgb,var(--a) 25%,transparent);color:var(--a-ink)}
+/* word list */
+.words{display:grid;gap:8px}
+.word{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.word b{font-family:var(--display);font-size:19px}
+.word .ex{font-style:italic;color:var(--muted);font-size:14px}
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:10px}
+.act{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px;text-align:left;display:grid;gap:6px}
+.act:hover{border-color:var(--accent)}
+.act svg{width:26px;height:26px;color:var(--accent)}
+.act b{font-family:var(--display);font-size:17px}
+.act span{font-size:13px;color:var(--muted)}
+/* games */
+.game{max-width:720px;margin:0 auto;width:100%;display:grid;gap:16px}
+.game-top{display:flex;align-items:center;gap:12px}
+.game-top .meter{flex:1}
+.flash{perspective:1200px;cursor:pointer;min-height:260px}
+.flash-inner{position:relative;min-height:260px;transition:transform .5s;transform-style:preserve-3d}
+.flash.flipped .flash-inner{transform:rotateY(180deg)}
+.flash .face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;text-align:center}
+.flash .back{transform:rotateY(180deg)}
+.big-word{font-family:var(--display);font-size:clamp(32px,6vw,48px);font-weight:800;overflow-wrap:anywhere}
+.opts{display:grid;gap:10px}
+.opt{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;text-align:left;font-size:17px}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.opt[disabled]{cursor:default}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match .col{display:grid;gap:8px;align-content:start}
+.tile{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px;font-size:15px;min-height:52px;text-align:center}
+.tile.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.tile.done{visibility:hidden}
+.tile.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.field{display:grid;gap:6px}
+.field label{font-weight:700;font-size:14px}
+input[type=text],input[type=date],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;width:100%}
+textarea{min-height:90px;resize:vertical}
+.spell-in{font-size:24px;text-align:center;font-family:var(--display)}
+.feedback{min-height:28px;font-weight:700}
+.feedback.good{color:var(--good)} .feedback.bad{color:var(--bad)}
+.result{text-align:center;display:grid;gap:12px;justify-items:center}
+.stars{display:flex;gap:6px}
+.stars svg{width:42px;height:42px}
+/* badges */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px}
+.badge{border:1px dashed var(--line);border-radius:12px;padding:12px;text-align:center;display:grid;gap:4px;justify-items:center;opacity:.45}
+.badge.on{opacity:1;border-style:solid;background:var(--surface)}
+.badge svg{width:34px;height:34px}
+.badge b{font-size:14px}
+.badge span{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tbl{overflow-x:auto}
+.sub{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--surface)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:13px;padding:6px 10px;text-decoration:none;color:var(--ink);max-width:100%}
+.thumbs img{display:block;max-height:110px;width:auto;margin:-6px -10px}
+.avatar{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;font-size:13px;color:#fff;flex:none}
+.lb{display:grid;gap:6px}
+.lb-row{display:grid;grid-template-columns:28px 30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 8px;border-radius:10px}
+.lb-row.me{background:var(--sunk)}
+.lb-row .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.kenj-out{white-space:pre-wrap;background:var(--sunk);border-radius:12px;padding:12px;min-height:44px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:560px){.chips .chip.hide-sm{display:none}.stats b{font-size:22px}.word{grid-template-columns:auto minmax(0,1fr)}.word .lvl-act{grid-column:1/-1}}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="bar-top">
+      <svg class="logo" viewBox="0 0 64 48" aria-hidden="true"><path class="lb-body" d="M10 3h42a8 8 0 0 1 8 8v20a8 8 0 0 1-8 8H25l-11 8v-8h-4a8 8 0 0 1-8-8V11a8 8 0 0 1 8-8Z"/><circle class="lb-dot" cx="57" cy="6" r="6"/><text x="31" y="27.5" text-anchor="middle" font-size="17">Kenj</text></svg>
+      <div class="brand"><h1>Your English Study Guide</h1><p>with Mr. Kenj</p></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  </div>
+</header>
+<main class="wrap" id="main" aria-live="polite"></main>
+<div class="toast" id="toast" hidden></div>
+
+<script type="text/plain" id="vocab">
+#A1|introducing yourself|am, is, are · greeting and saying goodbye
+name|what someone is called|My name is Steve.
+meet|see someone for the first time|Nice to meet you.
+from|showing where someone was born|I am from Texas.
+live|have your home in a place|I live in New York.
+teacher|a person who teaches|He is an English teacher.
+goodbye|what you say when you leave|Goodbye, see you tomorrow.
+#A2|numbers, colours and things around us|what is this? / what are these?
+desk|a table for working or studying|My book is on the desk.
+chair|a seat for one person|Please sit on the chair.
+window|an opening in a wall with glass|Open the window, please.
+yellow|the colour of the sun|The taxi is yellow.
+eleven|the number 11|There are eleven students.
+these|used for things near you (plural)|What are these? They are pens.
+#A3|family and relationships|have · family members
+parents|your mother and father|My parents live in Ankara.
+sister|a girl with the same parents as you|I have one sister.
+brother|a boy with the same parents as you|My brother is 17.
+cousin|the child of your aunt or uncle|My cousin lives in London.
+married|having a husband or wife|She is married with two kids.
+grandmother|the mother of your mother or father|My grandmother is 80.
+#A4|hobbies and interests|I like / I don't like · my favourite … is
+hobby|something you enjoy in your free time|My hobby is reading.
+favourite|the one you like most|My favourite colour is blue.
+enjoy|get pleasure from something|I enjoy listening to music.
+painting|making pictures with paint|She loves painting.
+dislike|not like|I dislike cold weather.
+interested|wanting to know more about something|I'm interested in music.
+#A5|a usual day|present simple · after, before, when, until
+wake up|stop sleeping|I wake up at 7 o'clock.
+breakfast|the first meal of the day|I have breakfast at home.
+usually|in most cases|I usually take the bus.
+until|up to a certain time|I work until 6 pm.
+commute|travel to and from work|My commute is 30 minutes.
+routine|the things you do every day|Exercise is part of my routine.
+#A6|houses, neighbourhood and town|asking and giving directions
+neighbourhood|the area around your home|My neighbourhood is quiet.
+turn left|go to the left side|Turn left at the bank.
+straight|without turning|Go straight ahead.
+corner|the place where two streets meet|The café is on the corner.
+opposite|across from|The bank is opposite the park.
+bus stop|a place where buses stop|The bus stop is near my house.
+#A7|movies, music and books|likes, dislikes and preferences
+prefer|like one thing more than another|I prefer books to movies.
+comedy|a funny film|We watched a comedy.
+novel|a long story in a book|She is reading a novel.
+singer|a person who sings|Adele is my favourite singer.
+boring|not interesting|The film was boring.
+exciting|making you feel full of energy|It was an exciting book.
+#A8|sports and abilities|can for abilities, requests and offers
+can|be able to|I can swim.
+swim|move through water|Can you swim?
+team|a group that plays together|Our team won.
+play|take part in a game|I play football on Sundays.
+request|ask for something politely|Can you help me? It's a request.
+offer|say you will do something for someone|Can I carry your bag? That's an offer.
+#A9|favourite celebrities|nationality, job, character and appearance
+famous|known by many people|She is a famous actress.
+nationality|the country you belong to|His nationality is Spanish.
+tall|more than average height|He is tall and slim.
+friendly|kind and pleasant|She is very friendly.
+actor|a person who acts in films|He is a Hollywood actor.
+curly|with curls (hair)|She has curly hair.
+#A10|cinema and TV|present simple wh- questions
+channel|a TV station|What channel is the match on?
+series|a TV show with many episodes|I watch a crime series.
+episode|one part of a series|The new episode is tonight.
+ticket|a paper that lets you enter|How much is a cinema ticket?
+when|at what time|When does the film start?
+why|for what reason|Why do you like that show?
+#A11|business, workplaces and shopping|asking for and telling prices
+price|how much money something costs|What is the price?
+cashier|a person who takes money in a shop|Pay the cashier, please.
+office|a place where people work|She works in an office.
+pharmacy|a shop that sells medicine|The pharmacy is open.
+receipt|a paper that shows what you paid|Can I have the receipt?
+cheap|not costing much|This shirt is cheap.
+#A12|food and drink|would like · some, any, a lot of
+would like|want (polite)|I would like a coffee.
+some|a number or amount of|I want some water.
+any|used in questions and negatives|Do you have any milk?
+menu|a list of food in a restaurant|Can I see the menu?
+order|ask for food in a restaurant|Are you ready to order?
+bill|a paper showing what you must pay|Can we have the bill?
+#A13|shopping and money|how much … / how many …
+how much|asking about price or amount|How much is this?
+how many|asking about a number of things|How many apples do you have?
+exchange|change money to another currency|I want to exchange dollars.
+change|money you get back|Here is your change.
+size|how big something is|What size do you need?
+try on|put clothes on to check them|Can I try on this jacket?
+#A14|kinds of food and restaurants|polite requests with will and would
+reservation|a booking for a table|I have a reservation for two.
+waiter|a person who serves food|The waiter brought our food.
+dessert|sweet food after a meal|Would you like dessert?
+complain|say that something is wrong|I want to complain about the soup.
+cold|not warm|My soup is cold.
+would you|a polite way to ask|Would you bring some water, please?
+#A15|places, addresses and directions|prepositions of place
+address|where someone lives|What's your address?
+next to|beside|The bank is next to the school.
+between|in the middle of two things|It's between the café and the shop.
+crowded|full of people|The city centre is crowded.
+historic|old and important|It's a historic city.
+across|on the other side|The park is across the street.
+#A16|transportation and vehicles|comparatives · buying tickets
+taxi|a car you pay to ride in|Let's take a taxi.
+faster|more fast|The train is faster than the bus.
+cheaper|less expensive|The bus is cheaper than a taxi.
+single ticket|a ticket for one way|A single ticket to London, please.
+return ticket|a ticket there and back|I need a return ticket.
+platform|where you get on a train|The train leaves from platform 3.
+#A17|timetables and telling the time|adverbs of frequency
+always|every time|I always drink tea in the morning.
+often|many times|I often go to the gym.
+sometimes|not always|I sometimes eat out.
+never|at no time|I never smoke.
+timetable|a list of times|Check the bus timetable.
+quarter past|15 minutes after the hour|It's quarter past three.
+#A18|phone conversations|accepting and refusing invitations
+call|telephone someone|I'll call you later.
+hold on|wait (on the phone)|Hold on, please.
+invite|ask someone to come|I'd like to invite you to dinner.
+accept|say yes to something|I accept your invitation.
+refuse|say no to something|She refused the invitation.
+indoor|inside a building|Bowling is an indoor activity.
+#A19|requests, offers and advice|should · can
+should|it is a good idea to|You should see a doctor.
+advice|an opinion about what to do|Can you give me some advice?
+help|make things easier for someone|Can I help you?
+borrow|take something and give it back later|Can I borrow your pen?
+lend|give something for a short time|Can you lend me a pen?
+shouldn't|it is not a good idea to|You shouldn't stay up late.
+#A20|invitations and appointments|present continuous for arrangements
+appointment|a set time to meet someone|I have a dentist appointment.
+available|free to do something|Are you available on Friday?
+busy|having a lot to do|I'm busy tomorrow.
+message|words you send to someone|Can I take a message?
+arrange|plan something|We are arranging a meeting.
+tomorrow|the day after today|I'm meeting Jane tomorrow.
+#A21|future plans|will and be going to
+going to|for a planned future action|I'm going to visit Paris.
+will|for the future or a decision now|I will help you.
+holiday|time away from work or school|We're going on holiday.
+plan|something you intend to do|What are your plans?
+book|reserve a room or ticket|I'll book a hotel.
+abroad|in another country|They are going abroad.
+#A22|holiday plans|but, because, so, and · sightseeing
+sightseeing|visiting famous places|We went sightseeing in Rome.
+museum|a building with art or old objects|The museum opens at 9.
+because|for the reason that|I stayed home because it rained.
+so|for this reason|It was hot, so we swam.
+guide|a person or book that shows places|Our guide was great.
+map|a picture showing places and roads|Let's check the map.
+#A23|future plans and dreams|will · I think, in my opinion
+dream|something you really want|My dream is to travel the world.
+hope|want something to happen|I hope I will pass.
+I think|used to give your opinion|I think it will rain.
+in my opinion|what I believe|In my opinion, English is easy.
+future|the time after now|In the future, I will live by the sea.
+achieve|succeed in doing something|I want to achieve my goals.
+#A24|the past and childhood|past simple · was / were
+was|past of am / is|I was at home yesterday.
+were|past of are|They were happy.
+born|started life|I was born in 1995.
+childhood|the time when you were a child|I had a happy childhood.
+yesterday|the day before today|Where were you yesterday?
+ago|before now|I moved here two years ago.
+#A25|a great or terrible holiday|past simple with irregular verbs
+went|past of go|We went to Spain.
+saw|past of see|I saw the sea.
+amazing|very, very good|The hotel was amazing.
+terrible|very bad|The weather was terrible.
+lost|past of lose|I lost my passport.
+took|past of take|We took many photos.
+#A26|the best friend|present simple and present continuous
+best friend|the friend you like most|She is my best friend.
+trust|believe someone is honest|I trust my best friend.
+funny|making people laugh|He is really funny.
+together|with each other|We study together.
+support|help and encourage|Friends support each other.
+honest|telling the truth|My friend is always honest.
+#A27|personality and appearance|what does he look like?
+look like|be similar in appearance|What does he look like?
+slim|thin in a nice way|She is tall and slim.
+beard|hair on a man's chin|He has a beard.
+shy|nervous with other people|My brother is shy.
+generous|happy to give|She is very generous.
+handsome|good-looking (a man)|He is handsome.
+#A28|seasons, weather and clothes|present simple and continuous
+season|one of four parts of the year|Winter is my favourite season.
+sunny|with lots of sun|It's sunny today.
+rainy|with lots of rain|It's rainy in autumn.
+coat|warm clothes you wear outside|Wear your coat, it's cold.
+umbrella|you hold it in the rain|Take an umbrella.
+freezing|very cold|It's freezing outside.
+#A29|body, health and medicine|positive and negative imperatives
+headache|a pain in your head|I have a headache.
+fever|a high body temperature|He has a fever.
+medicine|something you take to feel better|Take this medicine twice a day.
+rest|relax and not work|You need to rest.
+stomach|where food goes in your body|My stomach hurts.
+don't|used for negative instructions|Don't eat too much sugar.
+#A30|countries and cultures|comparatives and superlatives
+culture|the way of life of a group of people|I love Japanese culture.
+the biggest|bigger than all the others|Russia is the biggest country.
+better|more good|This café is better than that one.
+the best|better than all the others|It's the best food in the world.
+tradition|a custom from the past|Tea is a British tradition.
+language|the words people speak|Spanish is a beautiful language.
+#B1|personal information|present simple · family, job, education, hobbies
+education|learning at school or university|I finished my education in 2015.
+degree|a university qualification|She has a degree in law.
+occupation|a job|What is your occupation?
+graduate|finish university|I graduated from Ankara University.
+single|not married|He is single.
+background|your family, education and experience|Tell me about your background.
+#B2|routines and frequency|time expressions and adverbs of frequency
+hardly ever|almost never|I hardly ever watch TV.
+once a week|one time every week|I go swimming once a week.
+rarely|not often|She rarely eats meat.
+on weekdays|Monday to Friday|I work on weekdays.
+every other day|one day yes, one day no|I run every other day.
+nowadays|at the present time|Nowadays, I work from home.
+#B3|daily activities|giving advice · habits and routines
+habit|something you do regularly|Smoking is a bad habit.
+healthy|good for your body|Eat healthy food.
+get up|get out of bed|I get up early.
+schedule|a plan of times and activities|I have a busy schedule.
+had better|strong advice|You'd better go to bed.
+manage|deal with something successfully|How do you manage your time?
+#B4|special occasions|would for unreal situations
+anniversary|the date something happened in an earlier year|Today is our wedding anniversary.
+graduation|the ceremony when you finish school|My graduation is in June.
+celebrate|do something special for an event|We celebrated my birthday.
+wedding|a marriage ceremony|The wedding was beautiful.
+would|for imaginary situations|I would buy a house if I were rich.
+engaged|having agreed to marry|They got engaged last year.
+#B5|appearances and personality|present perfect and past simple
+ever|at any time in your life|Have you ever been to Paris?
+already|before now|I have already eaten.
+yet|until now (questions and negatives)|Have you finished yet?
+reliable|can be trusted|He is a reliable friend.
+outgoing|friendly and social|She is very outgoing.
+middle-aged|about 40 to 60 years old|He is a middle-aged man.
+#B6|home cinema or movie theatre|I'd prefer · I'd rather
+I'd rather|I would prefer to|I'd rather stay at home.
+I'd prefer|I would like more|I'd prefer to watch it at home.
+movie theatre|a cinema|Let's go to the movie theatre.
+popcorn|a snack eaten at the cinema|I always buy popcorn.
+comfortable|pleasant and relaxing|Home is more comfortable.
+streaming|watching films online|I use a streaming service.
+#B7|TV series|giving reasons and consequences
+as a result|so; because of this|It rained. As a result, we stayed in.
+that's why|this is the reason|I was tired. That's why I slept early.
+because of|caused by|We were late because of traffic.
+plot|the story of a film or series|The plot is very exciting.
+season finale|the last episode of a season|The season finale was shocking.
+production|the making of a film or show|The production was expensive.
+#B8|learning a language|by + ing · keep + ing
+fluent|able to speak easily and well|She is fluent in English.
+accent|the way people pronounce words|He has a British accent.
+mistake|something that is wrong|Don't worry about mistakes.
+keep|continue doing something|Keep practising every day.
+improve|get better|I improve my English by reading.
+complain|say you are unhappy about something|He keeps complaining about the noise.
+#B9|goals and purposes|clauses of purpose
+goal|something you want to achieve|My goal is to get a promotion.
+in order to|for the purpose of|I study in order to pass the exam.
+so that|with the aim that|I saved money so that I could travel.
+purpose|the reason for doing something|What is the purpose of your visit?
+motivation|the reason you want to do something|I need more motivation.
+progress|improvement over time|I've made good progress.
+#B10|newspapers and news reports|indirect questions
+could you tell me|starts a polite indirect question|Could you tell me where the bank is?
+I wonder|I want to know|I wonder what time it is.
+headline|the title of a news story|Did you see today's headline?
+article|a piece of writing in a newspaper|I read an interesting article.
+reporter|a person who reports the news|The reporter asked many questions.
+journalist|a person who writes for news media|She is a journalist.
+#B11|past events and memories|present perfect continuous · used to
+used to|did in the past but not now|I used to play football.
+memory|something you remember|I have good memories of school.
+since|from a point in time until now|I've lived here since 2010.
+for|during a period of time|I've been waiting for an hour.
+remember|keep something in your mind|I remember my first day at school.
+childhood|the time when you were a child|My childhood was happy.
+#B12|changes and improvements|present perfect and present perfect continuous
+improve|get better|My English has improved.
+achievement|something done successfully|Graduating was a big achievement.
+promotion|a better job in the same company|She got a promotion.
+recently|not long ago|I have recently started a new job.
+skill|the ability to do something well|Communication is an important skill.
+succeed|do what you tried to do|He succeeded in his exams.
+#B13|business life and workplaces|infinitives and gerunds for purpose
+colleague|a person you work with|My colleagues are friendly.
+manager|a person in charge of others|I talked to my manager.
+employee|a person who works for a company|The company has 200 employees.
+deadline|the time when work must be finished|The deadline is Friday.
+salary|money you get for your job|He has a good salary.
+responsible for|in charge of|I'm responsible for sales.
+#B14|languages|gerunds and infinitives · linking words
+however|but (more formal)|It's difficult; however, it's fun.
+native speaker|a person who learned a language as a child|She is a native speaker of English.
+grammar|the rules of a language|Grammar is important.
+vocabulary|the words of a language|I learn new vocabulary every day.
+practise|do something again and again to improve|I practise speaking every day.
+therefore|for that reason|He studied hard; therefore, he passed.
+#B15|business rules|have to and must
+have to|it is necessary (a rule from outside)|I have to wear a uniform.
+must|it is necessary (strong)|You must sign the contract.
+don't have to|it is not necessary|You don't have to come early.
+mustn't|it is not allowed|You mustn't smoke here.
+contract|a legal agreement|We signed the contract.
+customer|a person who buys something|The customer is always right.
+#B16|choosing a career|preparing a resume
+career|the jobs you do in your working life|She has a career in medicine.
+resume|a document about your education and work|Send me your resume.
+qualification|a certificate or skill for a job|What are your qualifications?
+experience|knowledge from doing something|I have five years of experience.
+apply|ask formally for a job|I applied for the job.
+strength|a good quality|My strength is teamwork.
+#B17|business meetings|organising and meeting expressions
+agenda|a list of topics for a meeting|What's on the agenda?
+attend|go to an event|I'll attend the meeting.
+postpone|move to a later time|We postponed the meeting.
+minutes|written notes of a meeting|Who is taking the minutes?
+agree|have the same opinion|I agree with you.
+point|an idea or opinion|That's a good point.
+#B18|technology|past simple revision · computers and electronics
+device|a machine or tool|A phone is a useful device.
+laptop|a computer you can carry|I work on my laptop.
+download|copy from the internet|I downloaded the file.
+install|put software on a computer|Install the app first.
+screen|the part of a device you look at|The screen is broken.
+invent|create something new|Who invented the computer?
+#B19|social media and the internet|opinion phrases and conjunctions
+post|share something online|She posted a photo.
+follower|a person who follows you online|He has many followers.
+share|let others see something|Share this video with your friends.
+addicted|unable to stop doing something|Some teens are addicted to their phones.
+privacy|keeping personal things secret|Protect your privacy online.
+as far as I'm concerned|in my opinion|As far as I'm concerned, it's a waste of time.
+#B20|history|passive voice in the past
+discovery|finding something new|The discovery of penicillin changed medicine.
+war|fighting between countries|The war ended in 1945.
+empire|many countries ruled by one ruler|The Ottoman Empire was very large.
+century|a period of 100 years|The bridge was built in the 19th century.
+invented|created for the first time|The telephone was invented by Bell.
+built|past participle of build|The castle was built in 1200.
+#B21|science and discoveries|future perfect and future continuous
+research|careful study to find new facts|Scientists do research.
+experiment|a scientific test|They did an experiment.
+innovation|a new idea or method|Innovation drives progress.
+scientist|a person who works in science|She is a famous scientist.
+will have|completed before a future time|By 2030, we will have found a cure.
+will be|in progress at a future time|This time tomorrow I will be flying.
+#B22|smartphones|present perfect for recent changes
+app|a program on a phone|I've just downloaded a new app.
+battery|the part that stores power|My battery is dead.
+charge|put power into a battery|I need to charge my phone.
+notification|an alert message on a phone|I got a notification.
+update|a newer version|Have you updated your phone?
+just|a very short time ago|I've just bought a new phone.
+#B23|women and men in society|obligations · job and household responsibilities
+equality|being equal|Gender equality is important.
+chores|regular jobs at home|We share the chores.
+household|the people living in one home|Every household needs rules.
+role|a position or job|Her role is manager.
+equal|the same in value|Men and women should get equal pay.
+stereotype|a fixed idea about a group|That's just a stereotype.
+#B24|city and country life|gerunds and infinitives revision
+countryside|the land outside towns|I love the peace of the countryside.
+pollution|dirty air, water or land|Pollution is a big problem.
+traffic|cars on the road|The traffic is terrible.
+peaceful|quiet and calm|The village is peaceful.
+convenient|easy and useful|City life is convenient.
+facilities|buildings and services for people|The city has good facilities.
+#B25|living abroad|if sentences for future possibilities
+if|introduces a condition|If I move abroad, I will learn a new language.
+accommodation|a place to stay|Accommodation is expensive.
+rent|pay money to live in a place|I rent a flat.
+homesick|sad because you miss home|I felt homesick.
+visa|permission to enter a country|You need a visa.
+adapt|change to fit a new situation|It takes time to adapt.
+#B26|telling a story|past continuous · while, when, as
+suddenly|quickly and unexpectedly|Suddenly, the lights went out.
+while|during the time that|While I was walking, it started to rain.
+slowly|not fast|He walked slowly.
+eventually|in the end|Eventually, we found the hotel.
+meanwhile|at the same time|Meanwhile, Tom was cooking.
+frightening|making you afraid|It was a frightening night.
+#B27|emergency situations|past continuous and past simple
+accident|something bad that happens by chance|There was a car accident.
+injured|hurt|Two people were injured.
+ambulance|a vehicle for sick or hurt people|Call an ambulance!
+emergency|a sudden dangerous situation|In an emergency, call 112.
+steal|take something without permission|Someone tried to steal my wallet.
+witness|a person who saw something happen|The witness talked to the police.
+#B28|hanging out|relative clauses · places to go with friends
+hang out|spend free time with friends|We hang out at the mall.
+who|relative pronoun for people|She is the girl who lives next door.
+which|relative pronoun for things|This is the café which I like.
+where|relative word for places|That's the park where we play.
+picnic|a meal eaten outside|Let's have a picnic.
+get together|meet socially|Let's get together this weekend.
+#B29|finding the perfect partner|advanced phrases for likes and dislikes
+can't stand|really dislike|I can't stand liars.
+into|very interested in|I'm really into music.
+caring|kind and helpful|He is a caring person.
+sense of humour|the ability to be funny|She has a great sense of humour.
+attractive|nice to look at|He's very attractive.
+get along|have a good relationship|We get along well.
+#B30|happiness|comparatives · degrees of happy and sad
+delighted|very happy|I was delighted with the news.
+upset|unhappy and worried|She was upset about the exam.
+miserable|very unhappy|He felt miserable.
+cheerful|happy and positive|She is always cheerful.
+much happier|a lot more happy|I'm much happier now.
+content|satisfied|I'm content with my life.
+#C1|who am I?|character, feelings, background and experience
+introduce|tell someone your name|Allow me to introduce myself.
+ambitious|wanting to succeed|She is very ambitious.
+considerate|thinking about other people|He is a considerate person.
+selfish|caring only about yourself|Don't be selfish.
+dependable|reliable|My partner is dependable.
+anxious|worried|I feel anxious before exams.
+#C2|family life|advanced phrases for giving opinion
+supposed to|expected to because of a rule or duty|I'm supposed to do the housework.
+expected to|what people think you should do|Men are expected to help.
+raise|bring up children|They raised three children.
+single parent|a parent raising a child alone|She's a single parent.
+from my point of view|in my opinion|From my point of view, both should work.
+provide for|give the money and things needed|He provides for his family.
+#C3|common activities|things in common · personality traits
+in common|shared by two or more people|We have a lot in common.
+both|the two together|We both like jazz.
+neither|not one or the other|Neither of us smokes.
+whereas|while, on the other hand|I'm quiet, whereas she's talkative.
+similar|almost the same|Our tastes are similar.
+easygoing|relaxed and calm|He's very easygoing.
+#C4|phobias|cause and effect · fear, surprise and shock
+phobia|a strong, unreasonable fear|She has a phobia of spiders.
+terrified|extremely afraid|I'm terrified of heights.
+due to|because of|The flight was cancelled due to fog.
+consequently|as a result|He panicked; consequently, he fell.
+shocked|very surprised and upset|I was shocked by the news.
+overcome|succeed in dealing with a problem|She overcame her fear of flying.
+#C5|possibilities about our lives|modals for present and future
+might|possibly|I might change jobs next year.
+could|it is possible|It could rain later.
+may|possibly (more formal)|We may move abroad.
+probably|very likely|I'll probably stay home.
+certainly|definitely|She'll certainly pass.
+unlikely|not likely to happen|It's unlikely to snow.
+#C6|skills and work|necessity · supposed to, expected to
+talent|a natural ability|She has a talent for music.
+skilled|trained and able|He's a skilled engineer.
+need to|it is necessary to|You need to be patient.
+teamwork|working well with others|Teamwork is essential.
+deadline|the time when work must be finished|We're expected to meet every deadline.
+initiative|the ability to act without being told|Show some initiative.
+#C7|money or education|by + ing to talk about how to do things
+tuition|money paid for teaching|University tuition is expensive.
+scholarship|money given to a student|She won a scholarship.
+education system|how schools are organised|The education system needs reform.
+invest|put money or time into something|Invest in your education.
+saving|keeping money for later|You can afford it by saving money.
+earn|get money for work|He earns a good salary.
+#C8|employment|job adverts, CVs and interviews
+advertisement|a notice that offers or sells something|I saw a job advertisement.
+CV|a document about your education and work|Attach your CV to the email.
+interview|a formal meeting for a job|I have a job interview.
+candidate|a person applying for a job|She's the best candidate.
+hire|give someone a job|They hired a new manager.
+requirements|things that are needed|What are the requirements?
+#C9|proverbs|discourse markers · clarifying
+proverb|a short, wise saying|"Practice makes perfect" is a proverb.
+in other words|said in a different way|In other words, we failed.
+to put it simply|explaining something clearly|To put it simply, we need more time.
+actually|in fact|Actually, I disagree.
+anyway|used to change the topic|Anyway, let's continue.
+what I mean is|used to clarify|What I mean is, we should wait.
+#C10|personal development|advanced phrases for advice
+if I were you|used to give advice|If I were you, I'd take the job.
+worth|useful or good to do|It's worth learning a second language.
+self-confidence|belief in yourself|Work on your self-confidence.
+why don't you|used to make a suggestion|Why don't you try yoga?
+ought to|should|You ought to rest.
+habit|something you do regularly|Reading is a great habit.
+#C11|shopping|comparatives and superlatives · types of shopping
+bargain|something cheap and good|This coat was a bargain.
+discount|a lower price|Is there a discount?
+window shopping|looking in shops without buying|We went window shopping.
+refund|money given back|Can I get a refund?
+afford|have enough money for|I can't afford it.
+the most expensive|costing more than all the others|It's the most expensive shop in town.
+#C12|online shopping|adverbs with two forms
+delivery|bringing goods to you|Delivery is free.
+checkout|where you pay online|Go to checkout.
+track|follow the progress of|You can track your order.
+hardly|almost not|I hardly sleep before a big sale.
+lately|recently|I've been shopping online a lot lately.
+return policy|the rules for sending items back|Check the return policy.
+#C13|junk food and fast food|I'd prefer · I'd rather
+junk food|unhealthy food|Junk food is full of fat.
+nutritious|good for your health|Vegetables are nutritious.
+processed|changed with chemicals or machines|Avoid processed meat.
+calorie|a unit of energy in food|This burger has 800 calories.
+organic|grown without chemicals|I buy organic fruit.
+I'd rather|I would prefer to|I'd rather eat a salad.
+#C14|advertising and its effects|agreeing and disagreeing
+persuade|make someone believe or do something|Ads persuade us to buy.
+slogan|a short, memorable phrase|"Just do it" is a famous slogan.
+misleading|giving the wrong idea|That ad is misleading.
+target audience|the people an ad is for|Teenagers are the target audience.
+I couldn't agree more|I totally agree|I couldn't agree more!
+commercial|an advertisement on TV or radio|The commercial was funny.
+#C15|news about the future|indirect (reported) speech
+said|reported speech verb|She said that she was tired.
+told|reported speech verb with an object|He told me he would come.
+announce|tell people publicly|The company will announce new plans.
+claim|say something is true|He claimed he was innocent.
+according to|as said by|According to the news, prices will rise.
+reported|said in the news|It was reported that the road is closed.
+#C16|digital life|be / get used to · accustomed to
+used to|familiar with|I'm used to working online.
+accustomed|familiar with something|She's accustomed to video calls.
+online|on the internet|We meet online.
+screen time|time spent looking at devices|Limit your screen time.
+digital|using computers and the internet|We live in a digital world.
+device|a machine like a phone or tablet|Every student has a device.
+#C17|innovations and discoveries|future perfect and future continuous
+breakthrough|an important discovery|It was a medical breakthrough.
+advancement|progress or development|Advancement in technology is fast.
+artificial intelligence|computers that can think and learn|Artificial intelligence will change jobs.
+by the time|before that moment|By the time you arrive, I'll have left.
+cutting-edge|the most advanced|This lab uses cutting-edge technology.
+invention|something created for the first time|The phone was a great invention.
+#C18|life in space|perfect modals for probability
+must have|certainly did|They must have landed safely.
+can't have|certainly did not|He can't have seen it.
+might have|possibly did|Life might have existed on Mars.
+astronaut|a person who travels in space|The astronaut walked on the Moon.
+planet|a large body moving around a star|Mars is a red planet.
+exploration|travelling to discover new places|Space exploration is expensive.
+#C19|robots of the future|regrets with should have
+should have|used for regrets about the past|I should have studied harder.
+shouldn't have|used for regrets about the past|I shouldn't have said that.
+regret|feel sorry about something you did|I regret leaving early.
+robot|a machine that does tasks|Robots will do housework.
+automation|machines doing work people used to do|Automation may replace jobs.
+wish|want something to be different|I wish I had listened.
+#C20|types of holidays|present perfect revision · accommodation
+all-inclusive|the price includes everything|We booked an all-inclusive hotel.
+backpacking|cheap travel with a backpack|I went backpacking in Asia.
+cruise|a holiday on a ship|They went on a cruise.
+hostel|a cheap place to stay|We stayed in a hostel.
+destination|the place you travel to|Bali is a popular destination.
+itinerary|a travel plan|Here's our itinerary.
+#C21|celebrities|second conditional for unreal situations
+if I were|starts an unreal condition|If I were famous, I'd travel the world.
+paparazzi|photographers who follow celebrities|The paparazzi followed her.
+fame|being famous|Fame changed him.
+gossip|talk about other people's private lives|I don't like gossip.
+red carpet|a special event for stars|She walked the red carpet.
+influencer|a popular social media personality|She's an influencer.
+#C22|fashion and trends|have / get something done
+trendy|fashionable|That jacket is trendy.
+outdated|old-fashioned|That style is outdated.
+outfit|a set of clothes worn together|Nice outfit!
+tailor|a person who makes clothes|The tailor shortened my trousers.
+had|causative: someone did it for me|I had my hair cut.
+got|causative: arranged for it to be done|I got my suit cleaned.
+#C23|health issues|let / make causatives
+make|force someone to do something|The doctor made me stop smoking.
+let|allow someone to do something|My parents let me stay out late.
+lifestyle|the way you live|She has a healthy lifestyle.
+stress|worry and pressure|Stress is bad for your health.
+balanced diet|a healthy mix of food|Eat a balanced diet.
+check-up|a medical examination|I have a check-up next week.
+#C24|entertainment|advanced comparison structures
+the more|used in double comparatives|The more you practise, the better you get.
+far better|much better|This film is far better.
+not nearly as|much less|It's not nearly as good as the book.
+entertainment|things that amuse people|What kind of entertainment do you like?
+audience|the people watching|The audience loved it.
+gig|a live music performance|We went to a gig.
+#C25|media|passives with different tenses
+broadcast|send out on TV or radio|The match was broadcast worldwide.
+published|printed or put online for the public|The book has been published.
+editor|a person who prepares content|The editor checks every article.
+mass media|newspapers, TV and radio|Mass media influences opinion.
+censorship|controlling what is published|Censorship limits freedom.
+headline|the title of a news story|The headline was written by the editor.
+#C26|vehicles and driving|advanced preferences · I'd rather
+driving licence|a permit to drive|I got my driving licence.
+traffic jam|a long line of stopped cars|We were stuck in a traffic jam.
+overtake|pass another vehicle|Don't overtake on bends.
+speed limit|the maximum legal speed|The speed limit is 50.
+fuel|petrol or diesel|Fuel prices have gone up.
+I'd sooner|I would prefer to|I'd sooner take the train.
+#C27|historical events|third conditional
+revolution|a big change in government|The French Revolution began in 1789.
+ancient|very old|We visited ancient ruins.
+civilization|a developed society|The Roman civilization was huge.
+treaty|an official agreement between countries|They signed a peace treaty.
+would have|for an unreal past result|We would have won.
+if I had known|starts an unreal past condition|If I had known, I would have come.
+#C28|marriage|general revision · relationships
+commitment|a promise to be loyal|Marriage requires commitment.
+propose|ask someone to marry you|He proposed on the beach.
+divorce|the legal end of a marriage|They got a divorce.
+relationship|a connection between people|They have a strong relationship.
+compromise|an agreement where both sides give something|Every marriage needs compromise.
+spouse|a husband or wife|Bring your spouse to the party.
+#C29|details about the family|relative clauses · exaggerating words
+whose|relative word for possession|That's the man whose son is a doctor.
+extended family|relatives beyond parents and children|My extended family is huge.
+absolutely|completely (for exaggeration)|It was absolutely amazing!
+in-laws|your husband's or wife's family|My in-laws visit every Sunday.
+a million times|many times (exaggeration)|I've told you a million times!
+sibling|a brother or sister|I have three siblings.
+#C30|a lesson about life|noun clauses
+what matters|the important thing|What matters is being happy.
+whether|if (with two choices)|I don't know whether he's coming.
+the fact that|introduces a noun clause|The fact that he lied upset me.
+purpose|the reason for existing|What is the purpose of life?
+wisdom|knowledge from experience|Wisdom comes with age.
+grateful|thankful|I'm grateful for my family.
+</script>
+
+<script>
+(function(){
+"use strict";
+/* ---------- data ---------- */
+const LEVELS={A:{name:"Level A",tag:"Beginner"},B:{name:"Level B",tag:"Intermediate"},C:{name:"Level C",tag:"Advanced"}};
+const LESSONS=[];const BYID={};
+(function parse(){
+  let cur=null;
+  document.getElementById('vocab').textContent.split('\n').forEach(line=>{
+    line=line.trim(); if(!line) return;
+    if(line[0]==='#'){const [id,title,grammar]=line.slice(1).split('|');cur={id,level:id[0],n:+id.slice(1),title,grammar,words:[]};LESSONS.push(cur);BYID[id]=cur;return;}
+    const [w,m,e]=line.split('|'); cur.words.push({w,m,e,key:cur.id+'-'+cur.words.length,lesson:cur.id});
+  });
+})();
+const levelWords=l=>LESSONS.filter(x=>x.level===l).flatMap(x=>x.words);
+const ALLWORDS=LESSONS.flatMap(x=>x.words);
+const WORDBYKEY={};ALLWORDS.forEach(w=>WORDBYKEY[w.key]=w);
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const ymd=d=>{d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const daysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return ymd(d);};
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const norm=s=>String(s).toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' -]/g,'').replace(/\s+/g,' ').trim();
+const fmtDate=t=>{if(!t)return'';const d=new Date(t);return isNaN(d)?String(t):d.toLocaleDateString(undefined,{day:'numeric',month:'short'});};
+const colorFor=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))%360;return 'hsl('+h+' 55% 45%)';};
+const initials=n=>(n||'?').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600);}
+
+const I={ // small inline icons
+  speak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+  slow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></svg>',
+  fire:'<svg viewBox="0 0 24 24" fill="#f26b1d"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 1-3.5S9 11 10.5 11C10.5 7 12 2 12 2Z"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="#f2b31b"><path d="m12 2 3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8Z"/></svg>',
+  starOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"><path d="m12 2 3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21l1.5-7L2 9.3l7-.8Z"/></svg>',
+  brain:'<svg viewBox="0 0 24 24" fill="#2d5bff"><path d="M9 3a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h2V3Zm6 0a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-2V3Z"/></svg>',
+  cards:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>',
+  quiz:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>',
+  ear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4-4 4-4 8a3 3 0 0 1-6 0"/><path d="M10 9a2 2 0 1 1 4 0"/></svg>',
+  match:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="7" height="6" rx="1.5"/><rect x="14" y="14" width="7" height="6" rx="1.5"/><path d="M10 7h4v10"/></svg>',
+  gap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4M17 12h4"/><rect x="8" y="8" width="8" height="8" rx="1.5" stroke-dasharray="2 2"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>',
+  medal:'<svg viewBox="0 0 24 24"><path d="M7 2h4l2 6H9Z" fill="#2d5bff"/><path d="M17 2h-4l-2 6h4Z" fill="#e2513d"/><circle cx="12" cy="15" r="6" fill="#f2b31b"/><circle cx="12" cy="15" r="3.5" fill="none" stroke="#5a3f00" stroke-width="1.2"/></svg>'
+};
+
+/* ---------- state ---------- */
+const S={db:null,user:null,assets:null,sample:null,uid:null,name:'',teacher:false,canWrite:null,ready:false,
+  prog:null,view:'learn',lesson:null,game:null,assignments:[],mySubs:[],classProg:[],profiles:{},subs:{},
+  accent:lsGet('kenj-accent')||'en-GB',subFilter:'todo'};
+function defaultProg(){return{xp:0,streak:0,best:0,lastDay:'',level:'A',cards:{},scores:{},days:{},games:0,perfect:0,hw:0,updatedAt:0};}
+let LSKEY='kenj-prog';
+function readLocal(k){try{return Object.assign(defaultProg(),JSON.parse(lsGet(k)||'{}'));}catch(e){return defaultProg();}}
+S.prog=readLocal(LSKEY);
+
+let saveT=null;
+function save(){
+  lsSet(LSKEY,JSON.stringify(S.prog));
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    if(!S.db||!S.uid||S.canWrite===false) return;
+    S.prog.updatedAt=Date.now();
+    try{await S.db.doc('progress/'+S.uid).set(S.prog);}
+    catch(e){if(e&&e.code==='invalid_argument'){S.canWrite=false;render();}}
+  },1200);
+}
+function touchDay(){
+  const t=ymd();
+  if(S.prog.lastDay!==t){S.prog.streak=(S.prog.lastDay===daysAgo(1))?S.prog.streak+1:1;S.prog.lastDay=t;S.prog.best=Math.max(S.prog.best||0,S.prog.streak);}
+}
+function addXP(n){
+  touchDay();S.prog.xp+=n;const t=ymd();S.prog.days[t]=(S.prog.days[t]||0)+n;
+  const keys=Object.keys(S.prog.days).sort();while(keys.length>40){delete S.prog.days[keys.shift()];}
+  save();renderChips();
+}
+function liveStreak(p){return (p.lastDay===ymd()||p.lastDay===daysAgo(1))?p.streak:0;}
+const box=k=>S.prog.cards[k]||0;
+function setBox(k,v){S.prog.cards[k]=Math.max(0,Math.min(5,v));}
+const masteredCount=(p,lvl)=>Object.entries((p||S.prog).cards||{}).filter(([k,v])=>v>=3&&(!lvl||k[0]===lvl)).length;
+const lessonMastered=l=>l.words.filter(w=>box(w.key)>=3).length;
+function lessonsPassed(p,lvl){return Object.entries((p||S.prog).scores||{}).filter(([k,v])=>v>=80&&(!lvl||k[0]===lvl)).length;}
+function trickyWords(){return ALLWORDS.filter(w=>w.key in S.prog.cards&&S.prog.cards[w.key]<3);}
+
+/* ---------- speech ---------- */
+let voices=[];
+function loadVoices(){try{voices=speechSynthesis.getVoices()||[];}catch(e){voices=[];}}
+try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
+function speak(text,rate){
+  try{
+    const sy=window.speechSynthesis;if(!sy){toast('Your browser cannot play speech. Try Chrome, Edge or Safari.');return;}
+    sy.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=S.accent;u.rate=rate||0.95;
+    const v=voices.find(v=>v.lang===S.accent)||voices.find(v=>v.lang&&v.lang.startsWith('en'));if(v)u.voice=v;sy.speak(u);
+  }catch(e){toast('Speech is not available here.');}
+}
+
+/* ---------- badges ---------- */
+function badges(p){
+  p=p||S.prog;const m=masteredCount(p);
+  return [
+    {k:'first',t:'First steps',d:'Finish your first game',on:p.games>=1},
+    {k:'s3',t:'On a roll',d:'3-day streak',on:(p.best||0)>=3},
+    {k:'s7',t:'Week warrior',d:'7-day streak',on:(p.best||0)>=7},
+    {k:'w25',t:'Word collector',d:'Master 25 words',on:m>=25},
+    {k:'w100',t:'Word wizard',d:'Master 100 words',on:m>=100},
+    {k:'perfect',t:'Perfect score',d:'Get 100% in a game',on:p.perfect>=1},
+    {k:'hw1',t:'Homework hero',d:'Hand in homework',on:p.hw>=1},
+    {k:'hw5',t:'Always ready',d:'Hand in 5 homeworks',on:p.hw>=5},
+    {k:'xp1k',t:'1,000 XP',d:'Earn 1,000 points',on:p.xp>=1000},
+    {k:'lvA',t:'Level A star',d:'Pass all 30 A lessons',on:lessonsPassed(p,'A')>=30},
+    {k:'lvB',t:'Level B star',d:'Pass all 30 B lessons',on:lessonsPassed(p,'B')>=30},
+    {k:'lvC',t:'Level C star',d:'Pass all 30 C lessons',on:lessonsPassed(p,'C')>=30}
+  ];
+}
+
+/* ---------- chrome ---------- */
+function renderChips(){
+  $('#chips').innerHTML=
+    '<span class="chip" title="Day streak">'+I.fire+liveStreak(S.prog)+'</span>'+
+    '<span class="chip" title="Experience points">'+I.star+S.prog.xp.toLocaleString()+' XP</span>'+
+    '<span class="chip hide-sm" title="Words mastered">'+I.brain+masteredCount()+'</span>';
+}
+function renderTabs(){
+  const tabs=[['learn','Lessons'],['practice','Practice'],['homework','Homework'],['progress','My progress']];
+  if(S.teacher) tabs.push(['teacher','Teacher']);
+  $('#tabs').innerHTML=tabs.map(([k,l])=>'<a href="#'+k+'"'+(S.view===k?' aria-current="page"':'')+'>'+l+'</a>').join('');
+}
+function route(){
+  const h=(location.hash||'').slice(1);const ok=['learn','practice','homework','progress'].concat(S.teacher?['teacher']:[]);
+  S.view=ok.includes(h)?h:'learn';S.game=null;render();
+}
+window.addEventListener('hashchange',route);
+
+function render(){
+  renderTabs();renderChips();
+  const m=$('#main');
+  if(S.game){m.innerHTML=renderGame();afterGameRender();return;}
+  let html='';
+  if(S.ready&&S.db&&S.canWrite===false) html+='<div class="banner">Your progress is saved only on this device. Ask Mr. Kenj to share the app with you as a <b>Contributor</b> so your points, homework and progress are saved for him to see.</div>';
+  if(S.ready&&!S.db) html+='<div class="banner">You are using the guest version: games work, and progress is saved on this device only. Open the app from Mr. Kenj\'s link while signed in to hand in homework.</div>';
+  html+=({learn:viewLearn,practice:viewPractice,homework:viewHomework,progress:viewProgress,teacher:viewTeacher}[S.view])();
+  m.innerHTML=html;
+  if(S.view==='teacher') hydrateTeacher();
+}
+
+/* ---------- LEARN ---------- */
+function wordOfDay(){const pool=levelWords(S.prog.level);const d=new Date();const n=d.getFullYear()*400+d.getMonth()*31+d.getDate();return pool[n%pool.length];}
+function firstName(){return (S.name||'').split(/\s+/)[0];}
+function viewLearn(){
+  if(S.lesson) return viewLesson(BYID[S.lesson]);
+  const p=S.prog,lv=p.level,w=wordOfDay(),tricky=trickyWords().length;
+  const next=LESSONS.find(l=>l.level===lv&&!((p.scores[l.id]||0)>=80))||LESSONS.find(l=>l.level===lv);
+  let h='<section class="hello">'+
+    '<div class="panel"><div class="eyebrow">'+(S.teacher?'Teacher view':'Welcome back')+'</div><h2>'+(firstName()?'Hi, '+esc(firstName())+'!':'Hi there!')+' Ready to learn?</h2>'+
+    '<div class="stats"><div class="stat"><b>'+liveStreak(p)+'</b><span>day streak</span></div><div class="stat"><b>'+masteredCount()+'</b><span>words mastered</span></div><div class="stat"><b>'+lessonsPassed(p)+'</b><span>lessons passed</span></div></div>'+
+    '<div class="row" style="margin-top:14px"><button class="btn primary" data-act="open-lesson" data-id="'+next.id+'">Continue: Lesson '+next.n+'</button>'+
+    (tricky?'<button class="btn" data-act="review">Review '+tricky+' tricky word'+(tricky>1?'s':'')+'</button>':'')+'</div></div>'+
+    '<div class="icard"><div class="eyebrow">Word of the day · '+LEVELS[lv].name+'</div><div class="row" style="margin-top:6px"><span class="wotd-word">'+esc(w.w)+'</span><button class="icon-btn" aria-label="Listen" data-act="say" data-t="'+esc(w.w)+'">'+I.speak+'</button></div>'+
+    '<div style="line-height:28px">'+esc(w.m)+'</div><div style="line-height:28px;font-style:italic">“'+esc(w.e)+'”</div></div></section>';
+  h+='<section class="grid" style="gap:14px"><div class="row" style="justify-content:space-between"><h2 style="font-size:24px">Lessons</h2>'+levelSwitch()+'</div>';
+  h+='<div class="grid g3">'+LESSONS.filter(l=>l.level===lv).map(lessonCard).join('')+'</div></section>';
+  return h;
+}
+function levelSwitch(){return '<div class="lvl-switch" role="group" aria-label="Level">'+Object.keys(LEVELS).map(k=>'<button class="lv-'+k+'" aria-pressed="'+(S.prog.level===k)+'" data-act="level" data-l="'+k+'">'+LEVELS[k].name+'<small>'+LEVELS[k].tag+'</small></button>').join('')+'</div>';}
+function lessonCard(l){
+  const m=lessonMastered(l),sc=S.prog.scores[l.id];
+  const st=sc==null?'<span class="pill">Not started</span>':sc>=80?'<span class="pill good">Passed · '+sc+'%</span>':'<span class="pill warn">Best '+sc+'%</span>';
+  return '<button class="lesson lv-'+l.level+'" data-act="open-lesson" data-id="'+l.id+'"><span class="num">LESSON '+l.n+'</span><h3>'+esc(l.title)+'</h3><p>'+esc(l.grammar)+'</p>'+
+    '<div class="meter" aria-label="'+m+' of '+l.words.length+' words mastered"><i style="width:'+(m/l.words.length*100)+'%"></i></div><div class="row" style="justify-content:space-between"><span class="small muted">'+m+'/'+l.words.length+' words</span>'+st+'</div></button>';
+}
+function activityButtons(scope){
+  const a=[['flash','Flashcards','Flip, listen, remember',I.cards],['quiz','Quick quiz','Pick the right meaning',I.quiz],['spell','Listen & spell','Hear it, type it',I.ear],['match','Match up','Beat the clock',I.match],['gap','Fill the gap','Complete the sentence',I.gap],['say','Say it','Pronunciation practice',I.mic]];
+  return '<div class="acts">'+a.map(([k,t,d,ic])=>'<button class="act" data-act="play" data-g="'+k+'" data-scope="'+scope+'">'+ic+'<b>'+t+'</b><span>'+d+'</span></button>').join('')+'</div>';
+}
+function viewLesson(l){
+  const hw=S.assignments.filter(a=>a.lesson===l.id);
+  return '<section class="grid" style="gap:18px"><div><button class="btn ghost sm" data-act="close-lesson">'+I.back.replace('<svg','<svg width="16" height="16"')+' All lessons</button></div>'+
+  '<div class="panel lv-'+l.level+'" style="border-top:5px solid var(--lv)"><div class="eyebrow">'+LEVELS[l.level].name+' · Lesson '+l.n+'</div><h2 class="cap" style="font-size:30px;margin-top:4px">'+esc(l.title)+'</h2><p class="muted" style="margin:6px 0 0">Grammar focus: '+esc(l.grammar)+'</p>'+
+  (hw.length?'<p style="margin:10px 0 0"><span class="pill warn">Homework</span> '+hw.map(a=>esc(a.title)).join(', ')+' · <a href="#homework">Hand it in</a></p>':'')+'</div>'+
+  '<div><h3 style="font-size:20px;margin-bottom:10px">Practise this lesson</h3>'+activityButtons(l.id)+'</div>'+
+  '<div><h3 style="font-size:20px;margin-bottom:10px">Key words</h3><div class="words">'+l.words.map(w=>{const b=box(w.key);
+    return '<div class="word"><button class="icon-btn" aria-label="Listen to '+esc(w.w)+'" data-act="say" data-t="'+esc(w.w)+'">'+I.speak+'</button><div style="min-width:0"><b>'+esc(w.w)+'</b> <span class="muted">— '+esc(w.m)+'</span><div class="ex">'+esc(w.e)+'</div></div>'+
+    '<div class="row lvl-act" style="gap:6px;flex-wrap:nowrap">'+(b>=3?'<span class="pill good">Mastered</span>':w.key in S.prog.cards?'<span class="pill warn">Learning</span>':'<span class="pill">New</span>')+'<button class="icon-btn" aria-label="Listen to the example" data-act="say" data-t="'+esc(w.e)+'" data-r="0.8">'+I.slow+'</button></div></div>';}).join('')+'</div></div></section>';
+}
+
+/* ---------- PRACTICE ---------- */
+function viewPractice(){
+  const lv=S.prog.level,tricky=trickyWords().length;
+  return '<section class="grid" style="gap:18px"><div class="row" style="justify-content:space-between"><div><h2 style="font-size:26px">Practice zone</h2><p class="muted" style="margin:4px 0 0">Mixed words from every lesson in your level.</p></div>'+levelSwitch()+'</div>'+
+  activityButtons('level')+
+  '<div class="grid g2">'+
+  '<div class="panel"><div class="eyebrow">Smart review</div><h3 style="font-size:20px;margin:4px 0 8px">Tricky words</h3><p class="muted small" style="margin:0 0 12px">Words you got wrong or are still learning come back here until you master them.</p>'+
+  (tricky?'<button class="btn primary" data-act="review">Review '+tricky+' word'+(tricky>1?'s':'')+'</button>':'<span class="pill good">Nothing to review. Great work!</span>')+'</div>'+
+  '<div class="panel"><div class="eyebrow">Pronunciation lab</div><h3 style="font-size:20px;margin:4px 0 8px">Hear any word or sentence</h3>'+
+  '<div class="field"><label for="lab-text">Type English here</label><input type="text" id="lab-text" placeholder="e.g. Could you tell me where the station is?"></div>'+
+  '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="lab" data-r="0.95">'+I.speak.replace('<svg','<svg width="18" height="18"')+' Normal</button><button class="btn" data-act="lab" data-r="0.6">Slow</button>'+
+  '<select id="accent" aria-label="Accent" style="width:auto"><option value="en-GB"'+(S.accent==='en-GB'?' selected':'')+'>British accent</option><option value="en-US"'+(S.accent==='en-US'?' selected':'')+'>American accent</option></select></div></div>'+
+  (S.sample?kenjBox(null):'')+'</div></section>';
+}
+function kenjBox(w){
+  return '<div class="panel"><div class="eyebrow">Ask Mr. Kenj</div><h3 style="font-size:20px;margin:4px 0 8px">'+(w?'Use “'+esc(w.w)+'” in a sentence':'Check my sentence')+'</h3>'+
+  '<div class="field"><label for="kenj-in">'+(w?'Write your own sentence with this word':'Write a sentence and Mr. Kenj will check it')+'</label><textarea id="kenj-in" placeholder="'+(w?'My sentence…':'Yesterday I have went to the cinema.')+'"></textarea></div>'+
+  '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="kenj"'+(w?' data-key="'+w.key+'"':'')+'>Check it</button></div><div class="kenj-out" id="kenj-out" style="margin-top:10px" hidden></div></div>';
+}
+
+/* ---------- GAMES ---------- */
+function scopeWords(scope){
+  if(scope==='review') return shuffle(trickyWords()).slice(0,12);
+  if(scope==='level') return shuffle(levelWords(S.prog.level)).slice(0,12);
+  return shuffle(BYID[scope].words);
+}
+function scopeLabel(scope){return scope==='review'?'Tricky words':scope==='level'?LEVELS[S.prog.level].name+' mix':'Lesson '+BYID[scope].n+' · '+BYID[scope].title;}
+function startGame(type,scope){
+  let words=scopeWords(scope);
+  if(!words.length){toast('No words to practise yet.');return;}
+  const lvl=scope==='review'||scope==='level'?S.prog.level:BYID[scope].level;
+  const pool=scope==='review'?ALLWORDS:levelWords(lvl);
+  if(type==='spell') words=words.filter(w=>/^[a-z' -]+$/i.test(w.w)&&w.w.length<=22);
+  if(type==='gap') words=words.filter(w=>norm(w.e).includes(norm(w.w)));
+  if(type==='match') words=words.slice(0,6);
+  if(!words.length){toast('This set has no words for that game. Try another one.');return;}
+  S.game={type,scope,words,pool,i:0,score:0,xp:0,done:false,answered:false,flipped:false,start:Date.now(),sel:null,matched:[],tries:0};
+  if(type==='quiz'||type==='gap') S.game.opts=words.map(w=>makeOpts(w,pool,type));
+  if(type==='match'){S.game.left=shuffle(words);S.game.right=shuffle(words);}
+  render();window.scrollTo(0,0);
+}
+function makeOpts(w,pool,type){
+  const f=type==='quiz'?'m':'w';const seen=new Set([norm(w[f])]);const out=[w];
+  for(const o of shuffle(pool)){if(out.length>=4)break;if(!seen.has(norm(o[f]))){seen.add(norm(o[f]));out.push(o);}}
+  return shuffle(out);
+}
+function gameHead(){
+  const g=S.game,tot=g.words.length,names={flash:'Flashcards',quiz:'Quick quiz',spell:'Listen & spell',match:'Match up',gap:'Fill the gap',say:'Say it'};
+  const pos=g.type==='match'?g.matched.length:g.i;
+  return '<div class="game-top"><button class="icon-btn" aria-label="Exit game" data-act="exit">'+I.back+'</button><div style="min-width:0;flex:none"><div class="eyebrow">'+esc(scopeLabel(g.scope))+'</div><b style="font-family:var(--display);font-size:18px">'+names[g.type]+'</b></div>'+
+  '<div class="meter"><i style="width:'+(pos/tot*100)+'%"></i></div><span class="chip">'+Math.min(pos+(g.type==='match'?0:1),tot)+'/'+tot+'</span></div>';
+}
+function renderGame(){
+  const g=S.game;if(g.done) return renderResult();
+  const w=g.words[g.i];let b='';
+  if(g.type==='flash'){
+    b='<div class="flash'+(g.flipped?' flipped':'')+'" data-act="flip" role="button" tabindex="0" aria-label="Flip card"><div class="flash-inner"><div class="face front icard"><span class="eyebrow">Tap to see the meaning</span><span class="big-word">'+esc(w.w)+'</span></div>'+
+      '<div class="face back icard"><span class="big-word" style="font-size:28px">'+esc(w.w)+'</span><span style="font-size:19px">'+esc(w.m)+'</span><em>“'+esc(w.e)+'”</em></div></div></div>'+
+      '<div class="row" style="justify-content:center"><button class="btn" data-act="say" data-t="'+esc(w.w)+'">'+I.speak.replace('<svg','<svg width="18" height="18"')+' Listen</button><button class="btn" data-act="say" data-t="'+esc(w.e)+'" data-r="0.8">Example</button></div>'+
+      '<div class="row" style="justify-content:center"><button class="btn" data-act="flash-ans" data-k="0" style="border-color:var(--bad)">Still learning</button><button class="btn primary" data-act="flash-ans" data-k="1">I know it</button></div>';
+  } else if(g.type==='quiz'||g.type==='gap'){
+    const q=g.type==='quiz'?'<div class="icard" style="text-align:center"><div class="eyebrow">What does this mean?</div><div class="row" style="justify-content:center"><span class="big-word">'+esc(w.w)+'</span><button class="icon-btn" aria-label="Listen" data-act="say" data-t="'+esc(w.w)+'">'+I.speak+'</button></div></div>'
+      :'<div class="icard"><div class="eyebrow">Choose the missing words</div><p style="font-size:22px;line-height:28px;margin:8px 0 0">'+gapSentence(w)+'</p></div>';
+    b=q+'<div class="opts">'+g.opts[g.i].map((o,j)=>'<button class="opt" data-act="pick" data-j="'+j+'">'+esc(g.type==='quiz'?o.m:o.w)+'</button>').join('')+'</div><div class="feedback" id="fb"></div>';
+  } else if(g.type==='spell'){
+    b='<div class="icard" style="text-align:center;display:grid;gap:12px;justify-items:center"><div class="eyebrow">Listen and type the word</div><div class="row"><button class="btn primary" data-act="say" data-t="'+esc(w.w)+'">'+I.speak.replace('<svg','<svg width="18" height="18"')+' Play</button><button class="btn" data-act="say" data-t="'+esc(w.w)+'" data-r="0.55">Slow</button><button class="btn ghost" data-act="hint">Hint</button></div><div class="muted" id="hint">Meaning: '+esc(w.m)+'</div></div>'+
+      '<form id="spell-form" class="grid" style="gap:10px"><input type="text" class="spell-in" id="spell-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type the word"><button class="btn primary" type="submit" style="justify-content:center">Check</button></form><div class="feedback" id="fb"></div>';
+  } else if(g.type==='match'){
+    const secs=Math.round((Date.now()-g.start)/1000);
+    b='<p class="muted" style="margin:0">Tap a word, then its meaning. <span id="timer" class="chip">'+secs+'s</span></p><div class="match"><div class="col">'+g.left.map(x=>'<button class="tile'+(g.matched.includes(x.key)?' done':'')+(g.sel===x.key?' sel':'')+'" data-act="m-left" data-k="'+x.key+'"><b>'+esc(x.w)+'</b></button>').join('')+'</div>'+
+      '<div class="col">'+g.right.map(x=>'<button class="tile'+(g.matched.includes(x.key)?' done':'')+'" data-act="m-right" data-k="'+x.key+'">'+esc(x.m)+'</button>').join('')+'</div></div>';
+  } else if(g.type==='say'){
+    b='<div class="icard" style="text-align:center;display:grid;gap:10px;justify-items:center"><div class="eyebrow">Listen, then say it out loud 3 times</div><span class="big-word">'+esc(w.w)+'</span><span class="muted">'+esc(w.m)+'</span>'+
+      '<div class="row" style="justify-content:center"><button class="btn primary" data-act="say" data-t="'+esc(w.w)+'">'+I.speak.replace('<svg','<svg width="18" height="18"')+' Word</button><button class="btn" data-act="say" data-t="'+esc(w.w)+'" data-r="0.5">Slow</button><button class="btn" data-act="say" data-t="'+esc(w.e)+'" data-r="0.85">Sentence</button></div><em>“'+esc(w.e)+'”</em></div>'+
+      '<div class="row" style="justify-content:center"><button class="btn" data-act="say-ans" data-k="0">Need more practice</button><button class="btn primary" data-act="say-ans" data-k="1">I said it well</button></div>'+(S.sample?kenjBox(w):'');
+  }
+  return '<section class="game">'+gameHead()+b+'</section>';
+}
+function gapSentence(w){
+  const n=norm(w.w);const words=w.e.split(' ');
+  for(let s=0;s<words.length;s++)for(let e=s+1;e<=words.length;e++){if(norm(words.slice(s,e).join(' '))===n){
+    const tail=(words[e-1].match(/[.,!?;:]+$/)||[''])[0];
+    return esc(words.slice(0,s).join(' '))+' <span style="display:inline-block;min-width:90px;border-bottom:3px solid var(--accent)">&nbsp;</span>'+esc(tail)+' '+esc(words.slice(e).join(' '));}}
+  return esc(w.e.replace(new RegExp(w.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'),'_____'));
+}
+let matchTimer=null;
+function afterGameRender(){
+  clearInterval(matchTimer);
+  const g=S.game;if(!g||g.done)return;
+  if(g.type==='match') matchTimer=setInterval(()=>{const t=$('#timer');if(!t||!S.game||S.game.done){clearInterval(matchTimer);return;}t.textContent=Math.round((Date.now()-S.game.start)/1000)+'s';},1000);
+  if(g.type==='spell'){const inp=$('#spell-in');if(inp)inp.focus();setTimeout(()=>speak(g.words[g.i].w),250);}
+}
+function next(){const g=S.game;g.i++;g.answered=false;g.flipped=false;if(g.i>=g.words.length)finish();else render();}
+function grade(w,ok){if(ok){setBox(w.key,box(w.key)+1);S.game.score++;S.game.xp+=10;}else setBox(w.key,0);}
+function finish(){
+  const g=S.game;g.done=true;const tot=g.words.length;g.pct=Math.round(g.score/tot*100);
+  g.xp+=20;if(g.pct===100){g.xp+=20;S.prog.perfect=(S.prog.perfect||0)+1;}
+  S.prog.games=(S.prog.games||0)+1;
+  if(g.scope!=='level'&&g.scope!=='review'&&g.type!=='flash'&&g.type!=='say') S.prog.scores[g.scope]=Math.max(S.prog.scores[g.scope]||0,g.pct);
+  addXP(g.xp);render();
+}
+function renderResult(){
+  const g=S.game,stars=g.pct>=90?3:g.pct>=60?2:g.pct>0?1:0;
+  const msg=g.pct===100?'Perfect! Mr. Kenj is proud of you.':g.pct>=80?'Great job!':g.pct>=50?'Good effort. Try again to beat your score.':'Keep going, practice makes perfect.';
+  const extra=g.type==='match'?'<p class="muted" style="margin:0">Time: '+g.secs+' seconds · '+g.tries+' tries</p>':'';
+  return '<section class="game"><div class="panel result"><div class="stars">'+[0,1,2].map(i=>i<stars?I.star:I.starOff).join('')+'</div><h2 style="font-size:32px">'+g.pct+'%</h2><p style="margin:0;font-size:18px">'+msg+'</p>'+extra+
+    '<span class="chip">'+I.star+'+'+g.xp+' XP</span><div class="row" style="justify-content:center"><button class="btn primary" data-act="play" data-g="'+g.type+'" data-scope="'+g.scope+'">Play again</button><button class="btn" data-act="exit">Done</button></div></div></section>';
+}
+
+/* ---------- HOMEWORK ---------- */
+function viewHomework(){
+  if(!S.db) return '<section class="panel"><h2 style="font-size:24px">Homework</h2><p class="muted">Homework needs the shared version of the app. Open Mr. Kenj\'s link while signed in.</p></section>';
+  const subsBy={};S.mySubs.forEach(s=>{(subsBy[s.assignmentId]=subsBy[s.assignmentId]||[]).push(s);});
+  const today=ymd();
+  const list=S.assignments.slice().sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9')));
+  let h='<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Homework</h2><p class="muted" style="margin:4px 0 0">Upload photos of your workbook, PDFs or short videos. Mr. Kenj will grade them and leave feedback here.</p></div>';
+  h+= list.length?'<div class="grid g2">'+list.map(a=>{
+    const mine=subsBy[a.id]||[],last=mine[0];const late=a.due&&a.due<today;
+    const status=last?(last.grade?'<span class="pill good">Graded: '+esc(last.grade)+'</span>':'<span class="pill">Handed in '+fmtDate(last.at)+'</span>'):late?'<span class="pill bad">Overdue</span>':'<span class="pill warn">To do</span>';
+    const L=a.lesson&&BYID[a.lesson];
+    return '<div class="panel" style="display:grid;gap:10px"><div class="row" style="justify-content:space-between"><span class="eyebrow">'+(a.due?'Due '+fmtDate(a.due):'No due date')+(L?' · '+LEVELS[L.level].name+' L'+L.n:'')+'</span>'+status+'</div><h3 style="font-size:20px">'+esc(a.title)+'</h3>'+
+      (a.details?'<p style="margin:0;white-space:pre-wrap">'+esc(a.details)+'</p>':'')+
+      (L?'<div><button class="btn sm" data-act="open-lesson" data-id="'+L.id+'" data-go="learn">Open lesson '+L.n+'</button></div>':'')+
+      (last&&last.feedback?'<div class="banner"><b>Mr. Kenj:</b> '+esc(last.feedback)+'</div>':'')+
+      handInForm(a.id)+'</div>';}).join('')+'</div>'
+    :'<div class="panel muted">No homework yet. When Mr. Kenj sets homework it appears here. You can still send extra work below.</div>';
+  h+='<div class="panel" style="display:grid;gap:10px"><h3 style="font-size:20px">Send extra work</h3><p class="muted small" style="margin:0">Practised something on your own? Send it to Mr. Kenj.</p>'+handInForm('free')+'</div>';
+  if(S.mySubs.length) h+='<div><h3 style="font-size:20px;margin-bottom:10px">My submissions</h3><div class="grid g2">'+S.mySubs.map(subCard).join('')+'</div></div>';
+  return h+'</section>';
+}
+function handInForm(aid){
+  return '<form class="grid hw-form" data-aid="'+aid+'" style="gap:8px"><div class="field"><label for="f-'+aid+'">Files (photos, PDF or video)</label><input type="file" id="f-'+aid+'" multiple accept="image/*,application/pdf,video/*,.txt"'+(S.assets?'':' disabled')+'></div>'+
+  (S.assets?'':'<span class="small muted">File upload needs Contributor access. You can still send a written answer.</span>')+
+  '<div class="field"><label for="n-'+aid+'">Your answer or a note</label><textarea id="n-'+aid+'" placeholder="Write your answer or a message to Mr. Kenj"></textarea></div><div><button class="btn primary" type="submit">Hand in</button></div></form>';
+}
+function filesHtml(files){
+  if(!files||!files.length) return '';
+  return '<div class="thumbs">'+files.map(f=>{const u='/_blob/'+encodeURIComponent(f.id);
+    return /^image\//.test(f.type)?'<a href="'+u+'" target="_blank" rel="noopener"><img src="'+u+'" alt="'+esc(f.name)+'"></a>':'<a href="'+u+'" target="_blank" rel="noopener">'+esc(f.name)+'</a>';}).join('')+'</div>';
+}
+function subCard(s){
+  return '<div class="sub"><div class="row" style="justify-content:space-between"><b>'+esc(s.title||'Extra work')+'</b>'+(s.grade?'<span class="pill good">'+esc(s.grade)+'</span>':'<span class="pill">Waiting for feedback</span>')+'</div>'+
+    '<span class="small muted">Handed in '+fmtDate(s.at)+'</span>'+(s.note?'<p style="margin:0;white-space:pre-wrap">'+esc(s.note)+'</p>':'')+filesHtml(s.files)+
+    (s.feedback?'<div class="banner"><b>Mr. Kenj:</b> '+esc(s.feedback)+'</div>':'')+'</div>';
+}
+async function handIn(form){
+  const aid=form.dataset.aid,fileIn=form.querySelector('input[type=file]'),note=form.querySelector('textarea').value.trim();
+  const btn=form.querySelector('button[type=submit]');
+  const files=fileIn&&fileIn.files?Array.from(fileIn.files):[];
+  if(!files.length&&!note){toast('Add a file or write an answer first.');return;}
+  if(!S.uid){toast('Sign in to hand in homework.');return;}
+  btn.disabled=true;btn.textContent='Uploading…';
+  try{
+    const up=[];
+    for(const f of files){
+      if(f.size>20*1024*1024){toast(f.name+' is larger than 20 MB. Please send a smaller file.');continue;}
+      const r=await S.assets.upload(f);up.push({id:r.id,name:f.name,type:r.contentType||f.type});
+    }
+    const a=S.assignments.find(x=>x.id===aid);
+    await S.db.collection('submissions/'+S.uid+'/items').add({assignmentId:aid,title:a?a.title:'Extra work',note,files:up,at:Date.now(),grade:'',feedback:''});
+    S.prog.hw=(S.prog.hw||0)+1;addXP(50);toast('Handed in! +50 XP');
+  }catch(e){toast(e&&e.code==='not_granted'?'You need Contributor access to upload files.':'Could not hand in: '+((e&&e.message)||'please try again'));}
+  finally{btn.disabled=false;btn.textContent='Hand in';}
+}
+
+/* ---------- PROGRESS ---------- */
+function viewProgress(){
+  const p=S.prog;
+  const days=[];for(let i=13;i>=0;i--){const d=daysAgo(i);days.push([d,p.days[d]||0]);}
+  const max=Math.max(50,...days.map(d=>d[1]));const W=560,H=170,pl=34,pb=22,bw=(W-pl)/14;
+  const ticks=[0,Math.round(max/2),max];
+  let svg='<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="XP earned in the last 14 days">';
+  ticks.forEach(t=>{const y=H-pb-(t/max)*(H-pb-10);svg+='<line x1="'+pl+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)"/><text x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end">'+t+'</text>';});
+  days.forEach(([d,v],i)=>{const bh=(v/max)*(H-pb-10);const x=pl+i*bw+bw*.18;svg+='<rect x="'+x+'" y="'+(H-pb-bh)+'" width="'+(bw*.64)+'" height="'+Math.max(bh,0)+'" rx="3" fill="'+(i===13?'var(--accent)':'color-mix(in srgb, var(--accent) 45%, transparent)')+'"><title>'+d+': '+v+' XP</title></rect>';
+    if(i%2===1||i===13)svg+='<text x="'+(x+bw*.32)+'" y="'+(H-6)+'" text-anchor="middle">'+(i===13?'Today':new Date(d+'T12:00').getDate())+'</text>';});
+  svg+='</svg>';
+  const lv=Object.keys(LEVELS).map(k=>{const tot=levelWords(k).length,m=masteredCount(p,k),ps=lessonsPassed(p,k);
+    return '<div class="lv-'+k+'" style="display:grid;gap:6px"><div class="row" style="justify-content:space-between"><b>'+LEVELS[k].name+' <span class="muted small">'+LEVELS[k].tag+'</span></b><span class="small muted">'+m+'/'+tot+' words · '+ps+'/30 lessons</span></div><div class="meter" style="height:10px"><i style="width:'+(m/tot*100)+'%"></i></div></div>';}).join('');
+  const bd=badges();
+  return '<section class="grid" style="gap:18px"><h2 style="font-size:26px">My progress</h2>'+
+    '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin:0"><div class="stat"><b>'+p.xp.toLocaleString()+'</b><span>total XP</span></div><div class="stat"><b>'+liveStreak(p)+'</b><span>day streak (best '+(p.best||0)+')</span></div><div class="stat"><b>'+masteredCount()+'</b><span>words mastered</span></div><div class="stat"><b>'+(p.games||0)+'</b><span>games played</span></div><div class="stat"><b>'+(p.hw||0)+'</b><span>homework handed in</span></div></div>'+
+    '<div class="grid g2"><div class="panel"><div class="eyebrow">Last 14 days</div><h3 style="font-size:19px;margin:4px 0 10px">XP earned each day</h3>'+svg+'</div>'+
+    '<div class="panel" style="display:grid;gap:14px;align-content:start"><div><div class="eyebrow">Levels</div><h3 style="font-size:19px;margin-top:4px">Words mastered</h3></div>'+lv+'<p class="small muted" style="margin:0">A word is mastered when you get it right 3 times in a row.</p></div></div>'+
+    '<div class="panel"><div class="eyebrow">'+bd.filter(b=>b.on).length+' of '+bd.length+' earned</div><h3 style="font-size:19px;margin:4px 0 12px">Badges</h3><div class="badges">'+bd.map(b=>'<div class="badge'+(b.on?' on':'')+'">'+I.medal+'<b>'+b.t+'</b><span>'+b.d+'</span></div>').join('')+'</div></div>'+
+    (S.db?'<div class="panel"><div class="eyebrow">Top 10 by total XP</div><h3 style="font-size:19px;margin:4px 0 12px">Class leaderboard</h3><div class="lb" id="lb">'+leaderboard()+'</div></div>':'')+
+    '</section>';
+}
+function leaderboard(){
+  const rows=S.classProg.slice().sort((a,b)=>(b.xp||0)-(a.xp||0)).slice(0,10);
+  if(!rows.length) return '<p class="muted" style="margin:0">Play a game to join the leaderboard.</p>';
+  return rows.map((r,i)=>{const n=(S.profiles[r.id]&&S.profiles[r.id].name)||'Student';
+    return '<div class="lb-row'+(r.id===S.uid?' me':'')+'"><b>'+(i+1)+'</b><span class="avatar" style="background:'+colorFor(r.id)+'">'+esc(initials(n))+'</span><span class="n">'+esc(n)+(r.id===S.uid?' (you)':'')+'</span><b>'+(r.xp||0).toLocaleString()+' XP</b></div>';}).join('');
+}
+
+/* ---------- TEACHER ---------- */
+function viewTeacher(){
+  const students=S.classProg;
+  const opts=LESSONS.map(l=>'<option value="'+l.id+'">'+LEVELS[l.level].name+' · L'+l.n+' '+esc(l.title)+'</option>').join('');
+  const rows=students.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(r=>{const n=(S.profiles[r.id]&&S.profiles[r.id].name)||'Student';const subs=(S.subs[r.id]||[]);
+    return '<tr><td><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="avatar" style="background:'+colorFor(r.id)+'">'+esc(initials(n))+'</span>'+esc(n)+'</span></td><td>'+esc(r.level||'A')+'</td><td>'+(r.xp||0).toLocaleString()+'</td><td>'+liveStreak(r)+'</td><td>'+masteredCount(r)+'</td><td>'+lessonsPassed(r)+'</td><td>'+subs.length+(subs.filter(s=>!s.grade).length?' <span class="pill warn">'+subs.filter(s=>!s.grade).length+' new</span>':'')+'</td><td>'+(r.updatedAt?fmtDate(r.updatedAt):'—')+'</td></tr>';}).join('');
+  const all=[];Object.entries(S.subs).forEach(([sid,list])=>list.forEach(s=>all.push(Object.assign({sid},s))));
+  all.sort((a,b)=>(b.at||0)-(a.at||0));
+  const shown=S.subFilter==='todo'?all.filter(s=>!s.grade):all;
+  return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Teacher dashboard</h2><p class="muted" style="margin:4px 0 0">Share this app with your students as <b>Contributors</b> so they can save progress and upload homework.</p></div>'+
+  '<div class="panel"><div class="eyebrow">'+students.length+' learner'+(students.length===1?'':'s')+'</div><h3 style="font-size:20px;margin:4px 0 10px">Class progress</h3>'+
+  (rows?'<div class="tbl"><table><thead><tr><th>Student</th><th>Level</th><th>XP</th><th>Streak</th><th>Words</th><th>Lessons passed</th><th>Homework</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="muted" style="margin:0">Students appear here after they open the app and play their first game.</p>')+'</div>'+
+  '<div class="grid g2"><form class="panel grid" id="assign-form" style="gap:10px;align-content:start"><h3 style="font-size:20px">Set homework</h3>'+
+  '<div class="field"><label for="as-title">Title</label><input type="text" id="as-title" required placeholder="Workbook page 12 + 5 sentences"></div>'+
+  '<div class="field"><label for="as-lesson">Linked lesson (optional)</label><select id="as-lesson"><option value="">None</option>'+opts+'</select></div>'+
+  '<div class="field"><label for="as-due">Due date</label><input type="date" id="as-due"></div>'+
+  '<div class="field"><label for="as-details">Instructions</label><textarea id="as-details" placeholder="Write 5 sentences using this lesson\'s words. Upload a photo of your notebook."></textarea></div>'+
+  '<div><button class="btn primary" type="submit">Post homework</button></div></form>'+
+  '<div class="panel" style="display:grid;gap:10px;align-content:start"><h3 style="font-size:20px">Posted homework</h3>'+(S.assignments.length?S.assignments.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(a=>{const cnt=all.filter(s=>s.assignmentId===a.id).length;
+    return '<div class="sub" style="gap:4px"><div class="row" style="justify-content:space-between"><b>'+esc(a.title)+'</b><button class="btn sm ghost" data-act="del-assign" data-id="'+a.id+'">'+(S.confirmDel===a.id?'Tap again to delete':'Delete')+'</button></div><span class="small muted">'+(a.due?'Due '+fmtDate(a.due)+' · ':'')+cnt+' handed in'+(a.lesson&&BYID[a.lesson]?' · '+LEVELS[a.lesson[0]].name+' L'+BYID[a.lesson].n:'')+'</span></div>';}).join(''):'<p class="muted" style="margin:0">Nothing posted yet.</p>')+'</div></div>'+
+  '<div class="panel" style="display:grid;gap:12px"><div class="row" style="justify-content:space-between"><h3 style="font-size:20px">Submissions</h3><div class="row" style="gap:6px"><button class="btn sm'+(S.subFilter==='todo'?' primary':'')+'" data-act="subf" data-f="todo">Needs feedback ('+all.filter(s=>!s.grade).length+')</button><button class="btn sm'+(S.subFilter==='all'?' primary':'')+'" data-act="subf" data-f="all">All ('+all.length+')</button></div></div>'+
+  (shown.length?'<div class="grid g2">'+shown.map(s=>{const n=(S.profiles[s.sid]&&S.profiles[s.sid].name)||'Student';const fid=s.sid+'__'+s.id;
+    return '<div class="sub"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="row" style="gap:8px;flex-wrap:nowrap;min-width:0"><span class="avatar" style="background:'+colorFor(s.sid)+'">'+esc(initials(n))+'</span><b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(n)+'</b></span><span class="small muted">'+fmtDate(s.at)+'</span></div>'+
+    '<span class="eyebrow">'+esc(s.title||'Extra work')+'</span>'+(s.note?'<p style="margin:0;white-space:pre-wrap">'+esc(s.note)+'</p>':'')+filesHtml(s.files)+
+    '<form class="grid fb-form" data-sid="'+esc(s.sid)+'" data-id="'+esc(s.id)+'" style="gap:8px"><div class="row" style="gap:8px"><label for="g-'+fid+'" class="small"><b>Grade</b></label><select id="g-'+fid+'" style="width:auto">'+['','Excellent','Very good','Good','Needs work','Redo please'].map(g=>'<option'+(s.grade===g?' selected':'')+'>'+g+'</option>').join('')+'</select></div>'+
+    '<textarea id="t-'+fid+'" aria-label="Feedback" placeholder="Feedback for the student">'+esc(s.feedback||'')+'</textarea><div><button class="btn sm primary" type="submit">Save feedback</button></div></form></div>';}).join('')+'</div>':'<p class="muted" style="margin:0">'+(S.subFilter==='todo'?'All caught up.':'No submissions yet.')+'</p>')+'</div></section>';
+}
+const subListeners={};
+function hydrateTeacher(){
+  if(!S.db||!S.teacher) return;
+  S.classProg.forEach(r=>{
+    if(subListeners[r.id]) return;
+    subListeners[r.id]=S.db.collection('submissions/'+r.id+'/items').onSnapshot(snap=>{
+      S.subs[r.id]=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.view==='teacher'&&!S.game&&!busyTyping())render();
+    },()=>{});
+  });
+}
+function busyTyping(){const a=document.activeElement;return a&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)&&a.value;}
+
+/* ---------- events ---------- */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const a=t.dataset.act;
+  if(a==='say'){e.stopPropagation();speak(t.dataset.t,parseFloat(t.dataset.r)||0.95);return;}
+  if(a==='level'){S.prog.level=t.dataset.l;save();render();return;}
+  if(a==='open-lesson'){S.lesson=t.dataset.id;S.prog.level=BYID[S.lesson].level;if(t.dataset.go&&S.view!=='learn'){location.hash='learn';S.view='learn';}render();window.scrollTo(0,0);return;}
+  if(a==='close-lesson'){S.lesson=null;render();return;}
+  if(a==='review'){startGame('flash','review');return;}
+  if(a==='play'){startGame(t.dataset.g,t.dataset.scope);return;}
+  if(a==='exit'){S.game=null;clearInterval(matchTimer);render();return;}
+  if(a==='lab'){const v=($('#lab-text')||{}).value;if(!v||!v.trim()){toast('Type a word or sentence first.');return;}speak(v,parseFloat(t.dataset.r));return;}
+  if(a==='subf'){S.subFilter=t.dataset.f;render();return;}
+  if(a==='del-assign'){
+    if(S.confirmDel!==t.dataset.id){S.confirmDel=t.dataset.id;render();return;}
+    S.confirmDel=null;try{await S.db.doc('assignments/'+t.dataset.id).delete();toast('Homework deleted');}catch(err){toast('Could not delete: '+(err.message||err.code));}return;}
+  if(a==='kenj'){askKenj(t);return;}
+  const g=S.game;if(!g)return;
+  if(a==='flip'){g.flipped=!g.flipped;t.classList.toggle('flipped',g.flipped);if(g.flipped)speak(g.words[g.i].w);return;}
+  if(a==='flash-ans'){const w=g.words[g.i];const ok=t.dataset.k==='1';grade(w,ok);if(!ok)g.xp+=2;next();return;}
+  if(a==='say-ans'){const w=g.words[g.i];if(t.dataset.k==='1'){g.score++;g.xp+=5;}next();return;}
+  if(a==='pick'){
+    if(g.answered)return;g.answered=true;const w=g.words[g.i],o=g.opts[g.i][+t.dataset.j],ok=o.key===w.key;grade(w,ok);
+    document.querySelectorAll('.opt').forEach((b,j)=>{b.disabled=true;if(g.opts[g.i][j].key===w.key)b.classList.add('right');});
+    if(!ok)t.classList.add('wrong');
+    const fb=$('#fb');fb.className='feedback '+(ok?'good':'bad');fb.textContent=ok?'Correct! +10':'The answer is: '+(g.type==='quiz'?w.m:w.w);
+    speak(g.type==='gap'?w.e:w.w);setTimeout(next,ok?1100:2200);return;}
+  if(a==='hint'){const w=g.words[g.i];$('#hint').textContent='Starts with “'+w.w.slice(0,2)+'…” · '+w.w.length+' letters';return;}
+  if(a==='m-left'){g.sel=t.dataset.k;document.querySelectorAll('[data-act=m-left]').forEach(b=>b.classList.toggle('sel',b===t));speak(WORDBYKEY[t.dataset.k].w);return;}
+  if(a==='m-right'){
+    if(!g.sel){toast('Tap a word first.');return;}
+    g.tries++;
+    if(t.dataset.k===g.sel){g.matched.push(g.sel);setBox(g.sel,box(g.sel)+1);g.score++;g.xp+=5;g.sel=null;
+      if(g.matched.length===g.words.length){g.secs=Math.round((Date.now()-g.start)/1000);g.score=Math.round(g.words.length*Math.min(1,g.words.length/g.tries));if(g.secs<30)g.xp+=15;g.i=g.words.length;finish();return;}
+      render();
+    }else{t.classList.remove('shake');void t.offsetWidth;t.classList.add('shake');}
+    return;}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t=e.target.closest&&e.target.closest('[data-act=flip]');if(t){e.preventDefault();t.click();}}});
+document.addEventListener('change',e=>{if(e.target.id==='accent'){S.accent=e.target.value;lsSet('kenj-accent',S.accent);}});
+document.addEventListener('submit',async e=>{
+  const f=e.target;
+  if(f.id==='spell-form'){e.preventDefault();const g=S.game;if(!g||g.answered)return;const w=g.words[g.i];const v=$('#spell-in').value;if(!v.trim())return;
+    g.answered=true;const ok=norm(v)===norm(w.w);grade(w,ok);const fb=$('#fb');fb.className='feedback '+(ok?'good':'bad');fb.textContent=ok?'Correct! +10':'It is spelled: '+w.w;setTimeout(next,ok?1000:2200);return;}
+  if(f.classList.contains('hw-form')){e.preventDefault();await handIn(f);return;}
+  if(f.id==='assign-form'){e.preventDefault();const title=$('#as-title').value.trim();if(!title)return;
+    try{await S.db.collection('assignments').add({title,lesson:$('#as-lesson').value,due:$('#as-due').value,details:$('#as-details').value.trim(),createdAt:Date.now()});toast('Homework posted');f.reset();}
+    catch(err){toast('Could not post: '+(err.message||err.code));}return;}
+  if(f.classList.contains('fb-form')){e.preventDefault();const fid=f.dataset.sid+'__'+f.dataset.id;
+    try{await S.db.doc('submissions/'+f.dataset.sid+'/items/'+f.dataset.id).update({grade:document.getElementById('g-'+fid).value,feedback:document.getElementById('t-'+fid).value.trim(),gradedAt:Date.now()});document.activeElement&&document.activeElement.blur();toast('Feedback saved');}
+    catch(err){toast('Could not save: '+(err.message||err.code));}return;}
+});
+
+/* ---------- Ask Mr. Kenj (sample) ---------- */
+let kenjAbort=null;
+async function askKenj(btn){
+  const inp=$('#kenj-in'),out=$('#kenj-out');const text=inp.value.trim();if(!text){toast('Write a sentence first.');return;}
+  const w=btn.dataset.key?WORDBYKEY[btn.dataset.key]:null;const lvl=w?w.lesson[0]:S.prog.level;
+  const prompt='You are Mr. Kenj, a warm, encouraging English teacher. The student is at '+LEVELS[lvl].name+' ('+LEVELS[lvl].tag+').'+
+    (w?' The target word is "'+w.w+'" meaning "'+w.m+'".':'')+
+    '\nStudent sentence: """'+text.slice(0,600)+'"""\n'+
+    'Reply in plain text, under 70 words, simple English for that level. 1) Say if it is correct'+(w?' and uses the target word well':'')+'. 2) If not, show the corrected sentence. 3) Give one short tip. No markdown.';
+  out.hidden=false;out.textContent='Mr. Kenj is reading…';btn.disabled=true;
+  if(kenjAbort)kenjAbort.abort();kenjAbort=new AbortController();
+  try{const r=await S.sample(prompt,{modelTier:'quick',cache:false,signal:kenjAbort.signal,onText:u=>{out.textContent=u.text;}});out.textContent=r.text;addXP(5);}
+  catch(e){out.textContent=e&&e.code==='rate_limited'?'Mr. Kenj needs a short break. Try again in a minute.':e&&e.code==='not_granted'?'Allow “Ask Claude” for this page to get sentence checks.':'Could not check right now. Please try again.';}
+  finally{btn.disabled=false;}
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  const h=(location.hash||'').slice(1);if(['learn','practice','homework','progress'].includes(h))S.view=h;
+  render();
+  if(!window.claude||!window.claude.use){S.ready=true;render();return;}
+  (async()=>{
+    const [db,user,assets,sample]=await Promise.all(['db','user','assets','sample'].map(n=>window.claude.use(n).catch(()=>null)));
+    S.db=db;S.user=user;S.assets=assets;S.sample=sample;
+    if(user){
+      try{S.uid=await user.id();}catch(e){}
+      try{const me=await user.me();S.name=me&&me.name||'';}catch(e){}
+      try{S.teacher=!!(await user.canEdit());}catch(e){}
+    }
+    if(db&&S.uid){
+      const timer=setTimeout(()=>{if(!S.ready){S.ready=true;render();}},10000);
+      LSKEY='kenj-prog:'+S.uid;const local=readLocal(LSKEY);S.prog=local;
+      try{
+        const snap=await db.doc('progress/'+S.uid).get();
+        const remote=snap.exists?Object.assign(defaultProg(),snap.data()||{}):null;
+        if(remote&&remote.xp>=local.xp) S.prog=remote; else if(local.xp>0) save();
+      }catch(e){}
+      clearTimeout(timer);
+      db.collection('assignments').onSnapshot(s=>{S.assignments=s.docs.map(d=>Object.assign({id:d.id},d.data()));if(!S.game&&!busyTyping())render();},()=>{});
+      db.collection('submissions/'+S.uid+'/items').onSnapshot(s=>{S.mySubs=s.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>(b.at||0)-(a.at||0));if(S.view==='homework'&&!S.game&&!busyTyping())render();},()=>{});
+      db.collection('progress').onSnapshot(async s=>{
+        S.classProg=s.docs.map(d=>Object.assign({id:d.id},d.data()));
+        try{const ids=S.classProg.map(r=>r.id);if(ids.length&&user)S.profiles=await user.profiles(ids);}catch(e){}
+        if(!S.game&&(S.view==='progress'||S.view==='teacher')&&!busyTyping())render();
+      },()=>{});
+    }
+    S.ready=true;route();
+  })();
+}
+window.addEventListener('pagehide',()=>{lsSet(LSKEY,JSON.stringify(S.prog));});
+boot();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+</body></html>
