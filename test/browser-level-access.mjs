@@ -63,33 +63,48 @@ const browser = await puppeteer.launch({
 
 try {
   const page = await browser.newPage();
-  page.setDefaultTimeout(8000);
+  page.setDefaultTimeout(20000);
   const errors = [];
   page.on('pageerror', (err) => errors.push(String(err)));
   await page.setViewport({ width: 1100, height: 900 });
   await page.goto(origin + '/', { waitUntil: 'domcontentloaded' });
-  await waitFor(page, () => /open on this device only/.test((document.querySelector('#level-access-status') || {}).innerText || ''), 'unconfigured banner');
+  await waitFor(page, () => {
+    const cfg = window.KENJ_LEVEL_ACCESS;
+    const st = window.__KENJ_TEST__ && window.__KENJ_TEST__.state();
+    return !!(cfg && cfg.enabled === true && cfg.firebase && cfg.firebase.projectId === 'general-english-c7371' && !cfg.firebase.measurementId && st && (st.mode === 'live' || st.mode === 'unknown' || st.mode === 'cached'));
+  }, 'live level access did not settle');
   assert(await page.title() === 'Your English Study Guide with Mr. Kenj', 'unexpected title');
+  const settled = await page.evaluate(() => window.__KENJ_TEST__.state());
+  assert(settled.mode === 'live', 'class lock document was not read, mode ' + settled.mode);
+  assert(settled.locks && settled.locks.A === false && settled.locks.B === false && settled.locks.C === false, 'a settings document was already present; this test must not change it');
   await click(page, 'a[href="#teacher"]');
-  await waitFor(page, () => /Class level locks are not live/.test(document.querySelector('#main').innerText), 'teacher notice');
+  await waitFor(page, () => !!document.querySelector('#level-teacher-form'), 'teacher sign-in form');
   let main = await text(page);
-  assert(/no lock switch is shown/i.test(main), 'unconfigured page should say no switch is shown');
-  assert(await page.evaluate(() => document.querySelectorAll('[data-act="toggle-lock"]').length) === 0, 'unconfigured page showed lock switches');
-  assert(/general-english-c7371/.test(main), 'teacher tab did not name the saved project');
-  assert(/tchmk9@gmail\.com/.test(main), 'teacher tab did not name the teacher address');
-  assert(/not live/i.test(main), 'teacher tab claimed the locks are live');
-  await shot(page, 'screenshot_teacher_email_listed_locks_off.png');
+  assert(/Sign in with the teacher email/.test(main), 'teacher tab did not ask for the teacher sign-in');
+  assert(await page.evaluate(() => document.querySelectorAll('[data-act="toggle-lock"]').length) === 0, 'unsigned teacher page showed lock switches');
+  await shot(page, 'screenshot_teacher_sign_in_before_verification.png');
+  await page.goto(origin + '/#learn', { waitUntil: 'domcontentloaded' });
+  await waitFor(page, () => {
+    const st = window.__KENJ_TEST__ && window.__KENJ_TEST__.state();
+    return !!(st && st.mode === 'live' && document.querySelector('[data-act="open-lesson"]'));
+  }, 'open lessons before any teacher lock');
+  const swText = await page.evaluate(async () => (await fetch('sw.js')).text());
+  assert(/mr-kenj-v4/.test(swText) && /level-access\.config\.js/.test(swText), 'service worker does not refresh the level-lock settings');
 
   const other = await browser.newPage();
   await other.setViewport({ width: 1100, height: 900 });
   await other.goto(origin + '/', { waitUntil: 'domcontentloaded' });
-  await waitFor(other, () => /open on this device only/.test((document.querySelector('#level-access-status') || {}).innerText || ''), 'second page banner');
+  await waitFor(other, () => {
+    const st = window.__KENJ_TEST__ && window.__KENJ_TEST__.state();
+    return !!(st && st.mode === 'live');
+  }, 'second page did not read the class locks');
   await other.evaluate(() => window.__KENJ_TEST__.configure());
 
   await page.evaluate(() => {
     window.__KENJ_TEST__.configure();
     window.__KENJ_TEST__.applyMissing();
     window.__KENJ_TEST__.seedProgress({ xp: 42, scores: { B3: 90 }, cards: { 'B3-0': 1, 'A1-0': 1 } });
+    location.hash = 'teacher';
   });
   await waitFor(page, () => !!document.querySelector('#level-teacher-form'), 'teacher sign-in form');
   assert(await page.evaluate(() => document.querySelectorAll('[data-act="toggle-lock"]').length) === 0, 'student view showed lock switches before sign-in');

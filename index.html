@@ -994,6 +994,7 @@ function viewLevelAccessPanel(){
   return '<div class="panel" id="level-access-panel"><div class="eyebrow">Level access</div><h3 style="font-size:20px">Levels for every student</h3>'+body+'</div>';
 }
 let testChannel=null;
+let accessUnsub=null;
 function listenTestChannel(){
   if(testChannel||!S.testMemory) return;
   try{
@@ -1080,7 +1081,8 @@ async function startLevelAccess(){
     const db=fsMod.getFirestore(app);
     S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,setDoc:fsMod.setDoc,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification};
     const ref=fsMod.doc(db,'settings','levelAccess');
-    fsMod.onSnapshot(ref,snap=>{
+    if(accessUnsub){accessUnsub();accessUnsub=null;}
+    accessUnsub=fsMod.onSnapshot(ref,snap=>{
       const fromCache=!!(snap.metadata&&snap.metadata.fromCache);
       if(!snap.exists()){if(!fromCache)S.accessCtl.applyMissing(Date.now());}
       else S.accessCtl.applySnapshot(snap.data(),Date.now(),{fromCache:fromCache});
@@ -1583,7 +1585,7 @@ function installTestHook(){
     applyRemote(data){const r=S.accessCtl.applySnapshot(data,Date.now());onAccessChanged();return r;},
     applyMissing(){const r=S.accessCtl.applyMissing(Date.now());onAccessChanged();return r;},
     applyError(err){S.accessCtl.applyError(err||{code:'test'},Date.now());onAccessChanged();},
-    configure(){S.accessCfg={configured:true,reason:'ready',teacherEmails:['teacher@example.com']};S.accessCtl.noteConfigured();S.testMemory=true;lsSet(KenjLevelAccess.FLAG_KEY,'1');listenTestChannel();render();},
+    configure(){if(accessUnsub){accessUnsub();accessUnsub=null;}S.accessCfg={configured:true,reason:'ready',teacherEmails:['teacher@example.com']};S.accessCtl.noteConfigured();S.testMemory=true;lsSet(KenjLevelAccess.FLAG_KEY,'1');listenTestChannel();render();},
     signIn(){if(!S.testMemory)return;S.levelTeacher=true;S.teacherEmail='teacher@example.com';render();},
     seedProgress(partial){partial=partial||{};if(partial.scores)Object.assign(S.prog.scores,partial.scores);if(partial.cards)Object.assign(S.prog.cards,partial.cards);if(partial.xp!=null)S.prog.xp=partial.xp;save();render();},
     showHomework(lessonId){S.assignments=[{id:'hw1',title:'Workbook page',lesson:lessonId,due:'',details:''}];S.db=S.db||{collection:function(){return {onSnapshot:function(){return function(){};}};},doc:function(){return {};}};location.hash='homework';},

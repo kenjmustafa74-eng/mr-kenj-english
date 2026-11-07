@@ -10,9 +10,9 @@ Progress is still saved in the browser on each device (`kenj-prog` in local stor
 
 Level locks are separate from those hosted tools. They need a shared store that students can read and only a signed-in teacher can write.
 
-The public web settings for the General English Firebase project `general-english-c7371` are saved in `level-access.config.js`. Analytics is not used. `enabled` is **false**. The only teacher address, in both the settings and `firestore.rules`, is `tchmk9@gmail.com`. Any other signed-in account is denied. The rules are not deployed, Email/Password sign-in was not found, and Cloud Firestore is not enabled, so the app does not show lock switches and does not call the database. Every level stays open on the device, and the Teacher tab says the locks are not live.
+The public web settings for the General English Firebase project `general-english-c7371` are in `level-access.config.js`, and `enabled` is **true**. Analytics is not used. The app reads `settings/levelAccess`. This repository does not create that document. Until the teacher saves one, every level stays open. The only writer is `tchmk9@gmail.com` after Firebase has verified that address. Any other account is denied.
 
-Do not treat a successful page load as proof that locks are shared. The page is **code-ready** for this project. It is **not live** until a teacher is listed, Email/Password sign-in exists for that teacher, Firestore is created, and `firestore.rules` are deployed. Then set `enabled` to `true`.
+Opening the page does not prove a teacher can write. That needs the verified teacher to sign in on the Teacher tab.
 
 ## Defaults
 
@@ -101,7 +101,7 @@ npm run test:browser
 | | Code-ready in this repository | Live for the class |
 | --- | --- | --- |
 | Lock and open screens, deep links, saved progress | Yes | Only after a real document is being read |
-| Web settings for `general-english-c7371` | Saved, with locks switched off | Not used for live locks while `enabled` is false |
-| Teacher sign-in and shared updates | `tchmk9@gmail.com` is the only writer in the settings and the rules | That user was not created from here, and the rules are not deployed |
-| Security rules | Written and checked as text; writes denied for every real account | Not deployed from here |
-| GitHub Pages build | Static files, including the web settings | Publishing the files does not deploy rules or create the database |
+| Web settings for `general-english-c7371` | `enabled` is true | Students read the class document after this release is on the Pages site |
+| Teacher sign-in and shared updates | Email and password, and only a verified `tchmk9@gmail.com` can write | The teacher still has to confirm the address and sign in |
+| Security rules | Verified email, and `updatedBy` must match that address | Published to this project separately from this repository |
+| GitHub Pages build | Static files, including the web settings | The public URL is the Pages site for this repository, after this release is published |

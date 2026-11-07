@@ -43,17 +43,17 @@ test('the example config is not a live connection and carries no password', () =
   assert.match(example, /Do not put a private key/);
 });
 
-test('the saved web settings do not turn level locks on', () => {
+test('the saved web settings enable the General English project', () => {
   const cfg = readWebConfig();
   const status = access.configStatus(cfg);
-  assert.equal(cfg.enabled, false);
+  assert.equal(cfg.enabled, true);
   assert.equal(cfg.firebase.projectId, 'general-english-c7371');
   assert.equal(cfg.firebase.authDomain, 'general-english-c7371.firebaseapp.com');
   assert.equal(cfg.firebase.measurementId, undefined);
   assert.equal(typeof cfg.firebase.apiKey, 'string');
   assert.equal(/YOUR_|REPLACE|placeholder/i.test(cfg.firebase.apiKey), false);
-  assert.equal(status.configured, false);
-  assert.equal(status.reason, 'disabled');
+  assert.equal(status.configured, true);
+  assert.equal(status.reason, 'ready');
   assert.equal(status.firebaseReady, true);
   assert.equal(status.projectId, 'general-english-c7371');
   assert.deepEqual(status.teacherEmails, ['tchmk9@gmail.com']);
