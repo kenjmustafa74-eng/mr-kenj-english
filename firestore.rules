@@ -29,9 +29,41 @@ service cloud.firestore {
         && request.resource.data.updatedBy == request.auth.token.email.lower();
     }
 
+    function isSignedInVerified() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true;
+    }
+
+    function isSelf(uid) {
+      return isSignedInVerified() && request.auth.uid == uid;
+    }
+
     match /settings/levelAccess {
       allow read: if true;
       allow create, update: if isTeacher() && validLevelAccess();
+      allow delete: if false;
+    }
+
+    match /accessRequests/{uid} {
+      allow get: if isTeacher() || isSelf(uid);
+      allow list: if isTeacher();
+      allow create: if isSelf(uid)
+        && !exists(/databases/$(database)/documents/accessRequests/$(uid))
+        && request.resource.data.keys().hasOnly(['email', 'requestedAt'])
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.requestedAt is number;
+      allow update, delete: if false;
+    }
+
+    match /accessGrants/{uid} {
+      allow get: if isTeacher() || isSelf(uid);
+      allow list: if isTeacher();
+      allow create, update: if isTeacher()
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt', 'updatedBy'])
+        && (request.resource.data.status == 'approved' || request.resource.data.status == 'revoked')
+        && request.resource.data.updatedAt is number
+        && request.resource.data.updatedBy == request.auth.token.email.lower();
       allow delete: if false;
     }
 

@@ -235,6 +235,44 @@
     return emailVerified === true && isTeacherEmail(email, allowList);
   }
 
+  function accessDecision(input) {
+    input = input || {};
+    if (!input.signedIn) return 'signed-out';
+    if (input.emailVerified !== true) return 'unverified';
+    if (input.isTeacher) return 'teacher';
+    if (input.readFailed) {
+      if (input.remembered === 'approved') return 'approved-offline';
+      if (input.remembered === 'revoked') return 'revoked';
+      if (input.remembered === 'pending') return 'pending';
+      return 'blocked';
+    }
+    if (input.grantStatus === 'approved') return 'approved';
+    if (input.grantStatus === 'revoked') return 'revoked';
+    return 'pending';
+  }
+
+  function canStudy(decision) {
+    return decision === 'teacher' || decision === 'approved' || decision === 'approved-offline';
+  }
+
+  function validAccessRequest(data, authEmail) {
+    if (!data || typeof data !== 'object') return false;
+    var keys = Object.keys(data);
+    if (keys.length !== 2) return false;
+    if (keys.indexOf('email') === -1 || keys.indexOf('requestedAt') === -1) return false;
+    return data.email === String(authEmail || '').trim().toLowerCase() && Number.isFinite(Number(data.requestedAt));
+  }
+
+  function validGrant(data, teacherEmail) {
+    if (!data || typeof data !== 'object') return false;
+    var keys = Object.keys(data);
+    if (keys.length !== 3) return false;
+    if (keys.indexOf('status') === -1 || keys.indexOf('updatedAt') === -1 || keys.indexOf('updatedBy') === -1) return false;
+    if (data.status !== 'approved' && data.status !== 'revoked') return false;
+    if (!Number.isFinite(Number(data.updatedAt))) return false;
+    return data.updatedBy === String(teacherEmail || '').trim().toLowerCase();
+  }
+
   function looksPlaceholder(value) {
     var v = String(value || '').trim();
     if (!v) return true;
@@ -337,6 +375,10 @@
     canStartScope: canStartScope,
     isTeacherEmail: isTeacherEmail,
     teacherWriteAllowed: teacherWriteAllowed,
+    accessDecision: accessDecision,
+    canStudy: canStudy,
+    validAccessRequest: validAccessRequest,
+    validGrant: validGrant,
     configStatus: configStatus,
     resolveBoot: resolveBoot,
     toggleLock: toggleLock,
