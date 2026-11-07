@@ -1,5 +1,5 @@
-/* Global level locks for Your English Study Guide with Mr. Kenj.
-   One document for every student. This file has no network calls so it can be tested on its own.
+/* Level locks for Your English Study Guide with Mr. Kenj.
+   One class-wide document, plus optional locks for each student on their grant. This file has no network calls so it can be tested on its own.
    The page decides when a store is configured and feeds snapshots in. */
 (function (root, factory) {
   var api = factory();
@@ -301,14 +301,167 @@
     return data.email === String(authEmail || '').trim().toLowerCase() && Number.isFinite(Number(data.requestedAt));
   }
 
+  var GRANT_KEYS = ['status', 'updatedAt', 'updatedBy', 'locks', 'name'];
+
+  function validLockMap(locks) {
+    if (!locks || typeof locks !== 'object' || Array.isArray(locks)) return false;
+    var keys = Object.keys(locks);
+    if (keys.length !== LEVEL_IDS.length) return false;
+    for (var i = 0; i < LEVEL_IDS.length; i++) {
+      if (typeof locks[LEVEL_IDS[i]] !== 'boolean') return false;
+    }
+    return true;
+  }
+
   function validGrant(data, teacherEmail) {
     if (!data || typeof data !== 'object') return false;
     var keys = Object.keys(data);
-    if (keys.length !== 3) return false;
+    for (var k = 0; k < keys.length; k++) if (GRANT_KEYS.indexOf(keys[k]) === -1) return false;
     if (keys.indexOf('status') === -1 || keys.indexOf('updatedAt') === -1 || keys.indexOf('updatedBy') === -1) return false;
     if (data.status !== 'approved' && data.status !== 'revoked') return false;
     if (!Number.isFinite(Number(data.updatedAt))) return false;
+    if ('locks' in data && !validLockMap(data.locks)) return false;
+    if ('name' in data && (typeof data.name !== 'string' || data.name.length > 60)) return false;
     return data.updatedBy === String(teacherEmail || '').trim().toLowerCase();
+  }
+
+  /* Per-student level locks. A grant may carry its own `locks` map. When it does, that map
+     decides the student's levels and the class-wide document is not used for that student.
+     When it does not, the class-wide locks apply as before. */
+  function studentLocksFromGrant(grant) {
+    if (!grant || typeof grant !== 'object') return null;
+    return validLockMap(grant.locks) ? cloneLocks(grant.locks) : null;
+  }
+
+  function studentAccessFor(ownLocks, level, classAccess) {
+    if (LEVEL_IDS.indexOf(level) === -1) return { open: false, reason: 'unknown-level' };
+    if (ownLocks && validLockMap(ownLocks)) {
+      return ownLocks[level] ? { open: false, reason: 'locked', own: true } : { open: true, reason: 'open', own: true };
+    }
+    return typeof classAccess === 'function' ? classAccess(level) : { open: false, reason: 'checking' };
+  }
+
+  /* Build the next grant document. `changes` may set status, locks (a lock map, or null to go
+     back to the class setting) and name. Unknown fields from older documents are dropped. */
+  function buildGrant(previous, changes, email, allowList, now) {
+    if (!isTeacherEmail(email, allowList)) {
+      var err = new Error('Only a listed teacher can change student access.');
+      err.code = 'not-teacher';
+      throw err;
+    }
+    previous = previous || {};
+    changes = changes || {};
+    var status = changes.status || previous.status || 'approved';
+    if (status !== 'approved' && status !== 'revoked') status = 'approved';
+    var out = { status: status, updatedAt: now || Date.now(), updatedBy: String(email).trim().toLowerCase() };
+    var locks = 'locks' in changes ? changes.locks : previous.locks;
+    if (locks && validLockMap(cloneLocks(locks))) out.locks = cloneLocks(locks);
+    var name = 'name' in changes ? changes.name : previous.name;
+    name = String(name == null ? '' : name).replace(/\s+/g, ' ').trim().slice(0, 60);
+    if (name) out.name = name;
+    return out;
+  }
+
+  /* ---------- notes and homework uploaded by the teacher ---------- */
+  var MAX_FILE_BYTES = 5 * 1024 * 1024;
+  var CHUNK_BYTES = 600 * 1024;
+  var MAX_CHUNKS = Math.ceil(MAX_FILE_BYTES / CHUNK_BYTES);
+  var MATERIAL_KINDS = ['note', 'homework'];
+
+  function chunkCount(size) {
+    var n = Math.ceil(Number(size) / CHUNK_BYTES);
+    return n > 0 ? n : 1;
+  }
+
+  /* Split a byte array into chunks of at most CHUNK_BYTES, each returned as base64 text. */
+  function splitBytes(bytes) {
+    var out = [];
+    for (var start = 0; start < bytes.length || (start === 0 && out.length === 0); start += CHUNK_BYTES) {
+      var part = bytes.subarray ? bytes.subarray(start, start + CHUNK_BYTES) : bytes.slice(start, start + CHUNK_BYTES);
+      out.push(bytesToBase64(part));
+      if (!bytes.length) break;
+    }
+    return out;
+  }
+
+  function bytesToBase64(bytes) {
+    if (typeof Buffer !== 'undefined' && !(typeof window !== 'undefined' && window.btoa)) return Buffer.from(bytes).toString('base64');
+    var bin = '';
+    for (var i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.prototype.slice.call(bytes, i, i + 0x8000));
+    return btoa(bin);
+  }
+
+  function base64ToBytes(text) {
+    if (typeof Buffer !== 'undefined' && !(typeof window !== 'undefined' && window.atob)) return new Uint8Array(Buffer.from(text, 'base64'));
+    var bin = atob(text);
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  function joinChunks(parts) {
+    var arrays = (parts || []).map(base64ToBytes);
+    var total = arrays.reduce(function (n, a) { return n + a.length; }, 0);
+    var out = new Uint8Array(total);
+    var at = 0;
+    arrays.forEach(function (a) { out.set(a, at); at += a.length; });
+    return out;
+  }
+
+  function safeLink(value) {
+    var v = String(value || '').trim();
+    if (!v) return '';
+    if (!/^https:\/\/[^\s<>"']+$/i.test(v) || v.length > 500) return null;
+    return v;
+  }
+
+  /* Check and tidy what the teacher typed in the upload form. Returns { ok, error, doc }. */
+  function buildMaterial(input, email, allowList, now) {
+    if (!isTeacherEmail(email, allowList)) return { ok: false, error: 'Only the teacher can add notes and homework.' };
+    input = input || {};
+    var kind = MATERIAL_KINDS.indexOf(input.kind) === -1 ? 'note' : input.kind;
+    var title = String(input.title || '').replace(/\s+/g, ' ').trim();
+    if (!title) return { ok: false, error: 'Give it a title.' };
+    if (title.length > 120) return { ok: false, error: 'Keep the title under 120 characters.' };
+    var details = String(input.details || '').trim();
+    if (details.length > 2000) return { ok: false, error: 'Keep the instructions under 2,000 characters.' };
+    var audience = String(input.audience || 'all').trim() || 'all';
+    if (audience.length > 128 || /[\/]/.test(audience)) return { ok: false, error: 'Choose who it is for.' };
+    var level = LEVEL_IDS.indexOf(input.level) === -1 ? '' : input.level;
+    var due = String(input.due || '').trim();
+    if (due && !/^\d{4}-\d{2}-\d{2}$/.test(due)) return { ok: false, error: 'Use a real due date.' };
+    if (kind !== 'homework') due = '';
+    var link = safeLink(input.link);
+    if (link === null) return { ok: false, error: 'A link must start with https:// .' };
+    var file = null;
+    if (input.file) {
+      var size = Number(input.file.size);
+      if (!(size > 0)) return { ok: false, error: 'That file is empty.' };
+      if (size > MAX_FILE_BYTES) return { ok: false, error: 'Files can be up to 5 MB. Make it smaller or share a link instead.' };
+      file = {
+        name: String(input.file.name || 'file').slice(0, 200),
+        type: String(input.file.type || 'application/octet-stream').slice(0, 100),
+        size: Math.floor(size),
+        chunks: chunkCount(size)
+      };
+    }
+    if (!file && !link && !details) return { ok: false, error: 'Add a file, a link or some instructions.' };
+    return {
+      ok: true,
+      doc: {
+        title: title, kind: kind, details: details, audience: audience, level: level, due: due,
+        link: link || '', file: file, createdAt: now || Date.now(), createdBy: String(email).trim().toLowerCase()
+      }
+    };
+  }
+
+  function materialVisibleTo(material, uid) {
+    if (!material || !uid) return false;
+    return material.audience === 'all' || material.audience === uid;
+  }
+
+  function sortMaterials(list) {
+    return (list || []).slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
   }
 
   function looksPlaceholder(value) {
@@ -421,6 +574,20 @@
     canStudy: canStudy,
     validAccessRequest: validAccessRequest,
     validGrant: validGrant,
+    validLockMap: validLockMap,
+    studentLocksFromGrant: studentLocksFromGrant,
+    studentAccessFor: studentAccessFor,
+    buildGrant: buildGrant,
+    MAX_FILE_BYTES: MAX_FILE_BYTES,
+    CHUNK_BYTES: CHUNK_BYTES,
+    MAX_CHUNKS: MAX_CHUNKS,
+    chunkCount: chunkCount,
+    splitBytes: splitBytes,
+    joinChunks: joinChunks,
+    safeLink: safeLink,
+    buildMaterial: buildMaterial,
+    materialVisibleTo: materialVisibleTo,
+    sortMaterials: sortMaterials,
     configStatus: configStatus,
     resolveBoot: resolveBoot,
     toggleLock: toggleLock,

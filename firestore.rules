@@ -1,5 +1,6 @@
 rules_version = '2';
-// One global level-access document for every student.
+// One class-wide level-access document, per-student access grants (which may
+// carry the student's own level locks), and notes/homework the teacher uploads.
 // A write is allowed only for tchmk9@gmail.com after Firebase has marked
 // that address verified. An unverified, anonymous, or different account
 // cannot write. updatedBy must be that same verified address. Delete is
@@ -56,15 +57,86 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    function validLockMap(locks) {
+      return locks is map
+        && locks.keys().hasOnly(['A', 'B', 'C'])
+        && locks.keys().hasAll(['A', 'B', 'C'])
+        && locks.A is bool
+        && locks.B is bool
+        && locks.C is bool;
+    }
+
+    function isApprovedStudent() {
+      return isSignedInVerified()
+        && exists(/databases/$(database)/documents/accessGrants/$(request.auth.uid))
+        && get(/databases/$(database)/documents/accessGrants/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    // A grant may carry `locks` (that student's own level locks) and `name`
+    // (a display name the teacher chose). Without `locks` the class-wide
+    // document decides that student's levels.
     match /accessGrants/{uid} {
       allow get: if isTeacher() || isSelf(uid);
       allow list: if isTeacher();
       allow create, update: if isTeacher()
-        && request.resource.data.keys().hasOnly(['status', 'updatedAt', 'updatedBy'])
+        && request.resource.data.keys().hasOnly(['status', 'updatedAt', 'updatedBy', 'locks', 'name'])
         && (request.resource.data.status == 'approved' || request.resource.data.status == 'revoked')
         && request.resource.data.updatedAt is number
-        && request.resource.data.updatedBy == request.auth.token.email.lower();
+        && request.resource.data.updatedBy == request.auth.token.email.lower()
+        && (!('locks' in request.resource.data) || validLockMap(request.resource.data.locks))
+        && (!('name' in request.resource.data)
+          || (request.resource.data.name is string && request.resource.data.name.size() <= 60));
       allow delete: if false;
+    }
+
+    function validFile(file) {
+      return file == null
+        || (file is map
+          && file.keys().hasOnly(['name', 'type', 'size', 'chunks'])
+          && file.name is string && file.name.size() <= 200
+          && file.type is string && file.type.size() <= 100
+          && file.size is int && file.size > 0 && file.size <= 5242880
+          && file.chunks is int && file.chunks >= 1 && file.chunks <= 9);
+    }
+
+    function validMaterial() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['title', 'kind', 'details', 'audience', 'level', 'due', 'link', 'file', 'createdAt', 'createdBy'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
+        && (d.kind == 'note' || d.kind == 'homework')
+        && d.details is string && d.details.size() <= 2000
+        && d.audience is string && d.audience.size() > 0 && d.audience.size() <= 128
+        && (d.level == '' || d.level == 'A' || d.level == 'B' || d.level == 'C')
+        && d.due is string && d.due.size() <= 10
+        && d.link is string && d.link.size() <= 500
+        && validFile(d.file)
+        && d.createdAt is number
+        && d.createdBy == request.auth.token.email.lower();
+    }
+
+    // Notes and homework. `audience` is 'all' or one student's uid.
+    // Students query audience == 'all' and audience == their own uid separately.
+    match /materials/{mid} {
+      allow read: if isTeacher()
+        || (isApprovedStudent()
+          && (resource.data.audience == 'all' || resource.data.audience == request.auth.uid));
+      allow create, update: if isTeacher() && validMaterial();
+      allow delete: if isTeacher();
+
+      // The uploaded file, split into pieces of at most 600 KB (about 800,000
+      // characters of base64 text) so each piece fits in one document.
+      match /chunks/{n} {
+        allow read: if isTeacher()
+          || (isApprovedStudent()
+            && exists(/databases/$(database)/documents/materials/$(mid))
+            && (get(/databases/$(database)/documents/materials/$(mid)).data.audience == 'all'
+              || get(/databases/$(database)/documents/materials/$(mid)).data.audience == request.auth.uid));
+        allow create, update: if isTeacher()
+          && request.resource.data.keys().hasOnly(['data'])
+          && request.resource.data.data is string
+          && request.resource.data.data.size() <= 900000;
+        allow delete: if isTeacher();
+      }
     }
 
     match /{document=**} {
