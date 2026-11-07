@@ -1,6 +1,6 @@
 // Offline support: cache the app shell, serve network-first so updates show up.
-const CACHE='mr-kenj-v1';
-const FILES=['./','index.html','manifest.json','icon.svg','icon-192.png','icon-512.png'];
+const CACHE='mr-kenj-v2';
+const FILES=['./','index.html','manifest.json','icon.svg','icon-192.png','icon-512.png','level-access.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES).catch(()=>{})));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))));self.clients.claim();});
 self.addEventListener('fetch',e=>{

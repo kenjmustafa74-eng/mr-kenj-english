@@ -1,0 +1,42 @@
+rules_version = '2';
+// One global level-access document for every student.
+// Owner setup: replace the placeholder email below with the teacher's
+// sign-in email, in lower case, and use that same address in
+// level-access.config.js. Deploy these rules before setting enabled: true.
+// This file is written for a Firebase project used by this app. The last
+// match denies every other path. If the project already stores other data,
+// merge this match into those rules instead of replacing them blindly.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isTeacher() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() in [
+          'replace-with-teacher@example.com'
+        ];
+    }
+
+    function validLevelAccess() {
+      return request.resource.data.keys().hasOnly(['locks', 'updatedAt', 'updatedBy'])
+        && request.resource.data.locks is map
+        && request.resource.data.locks.keys().hasOnly(['A', 'B', 'C'])
+        && request.resource.data.locks.A is bool
+        && request.resource.data.locks.B is bool
+        && request.resource.data.locks.C is bool
+        && request.resource.data.updatedAt is number
+        && request.resource.data.updatedBy is string
+        && request.resource.data.updatedBy.size() > 0
+        && request.resource.data.updatedBy.size() < 200;
+    }
+
+    match /settings/levelAccess {
+      allow read: if true;
+      allow create, update: if isTeacher() && validLevelAccess();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

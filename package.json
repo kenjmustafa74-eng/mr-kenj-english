@@ -1,0 +1,11 @@
+{
+  "name": "mr-kenj-english",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:browser": "node test/browser-level-access.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "24.15.0"
+  }
+}

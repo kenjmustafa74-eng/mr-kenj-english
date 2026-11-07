@@ -1,0 +1,8 @@
+node_modules/
+level-access.config.js
+.firebase/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
