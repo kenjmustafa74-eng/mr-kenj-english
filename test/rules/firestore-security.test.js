@@ -2,7 +2,7 @@ const { before, after, beforeEach, test } = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
-const { collection, doc, getDoc, getDocs, setDoc, deleteDoc } = require('firebase/firestore');
+const { collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where } = require('firebase/firestore');
 
 const TEACHER = 'tchmk9@gmail.com';
 const RULES = fs.readFileSync(path.join(__dirname, '..', '..', 'firestore.rules'), 'utf8');
@@ -115,4 +115,51 @@ test('a verified teacher cannot write an invalid document, delete, or touch anot
   await assertSucceeds(setDoc(ref, validDoc(TEACHER)));
   await assertFails(deleteDoc(ref));
   await assertFails(setDoc(doc(db, 'settings', 'other'), validDoc(TEACHER)));
+});
+
+function material(audience, extra) {
+  return Object.assign({
+    title: 'Page 12', kind: 'homework', details: 'Do 1-4', audience: audience, level: '', due: '2026-11-15',
+    link: '', file: { name: 'a.pdf', type: 'application/pdf', size: 1000, chunks: 1 }, createdAt: 40, createdBy: TEACHER
+  }, extra || {});
+}
+
+test('a teacher can give one student their own level locks and a name', async () => {
+  const teacher = dbFor('teacher-person', { email: TEACHER, email_verified: true });
+  const grant = doc(teacher, 'accessGrants', 'student-a');
+  await assertSucceeds(setDoc(grant, { status: 'approved', updatedAt: 50, updatedBy: TEACHER, locks: { A: false, B: true, C: false }, name: 'Ahmed' }));
+  await assertFails(setDoc(grant, { status: 'approved', updatedAt: 51, updatedBy: TEACHER, locks: { A: false, B: true } }));
+  await assertFails(setDoc(grant, { status: 'approved', updatedAt: 52, updatedBy: TEACHER, locks: { A: false, B: true, C: 'x' } }));
+  await assertFails(setDoc(grant, { status: 'approved', updatedAt: 53, updatedBy: TEACHER, name: 'x'.repeat(61) }));
+  const student = dbFor('student-a', studentToken('student@school.test', true));
+  await assertFails(setDoc(doc(student, 'accessGrants', 'student-a'), { status: 'approved', updatedAt: 54, updatedBy: TEACHER, locks: { A: false, B: false, C: false } }));
+});
+
+test('notes and homework reach only approved students they are meant for', async () => {
+  const teacher = dbFor('teacher-person', { email: TEACHER, email_verified: true });
+  await assertSucceeds(setDoc(doc(teacher, 'accessGrants', 'student-a'), { status: 'approved', updatedAt: 60, updatedBy: TEACHER }));
+  await assertSucceeds(setDoc(doc(teacher, 'accessGrants', 'student-b'), { status: 'approved', updatedAt: 60, updatedBy: TEACHER }));
+  await assertSucceeds(setDoc(doc(teacher, 'materials', 'm-all'), material('all', { file: null, kind: 'note', due: '' })));
+  await assertSucceeds(setDoc(doc(teacher, 'materials', 'm-a'), material('student-a')));
+  await assertSucceeds(setDoc(doc(teacher, 'materials', 'm-a', 'chunks', '0'), { data: 'aGVsbG8=' }));
+  await assertFails(setDoc(doc(teacher, 'materials', 'bad'), material('all', { extra: 1 })));
+  await assertFails(setDoc(doc(teacher, 'materials', 'bad2'), material('all', { file: { name: 'a', type: 'x', size: 6000000, chunks: 10 } })));
+  await assertFails(setDoc(doc(teacher, 'materials', 'm-a', 'chunks', '1'), { data: 'x'.repeat(900001) }));
+
+  const a = dbFor('student-a', studentToken('a@school.test', true));
+  const b = dbFor('student-b', studentToken('b@school.test', true));
+  const pending = dbFor('student-c', studentToken('c@school.test', true));
+  await assertSucceeds(getDoc(doc(a, 'materials', 'm-a')));
+  await assertSucceeds(getDoc(doc(a, 'materials', 'm-a', 'chunks', '0')));
+  await assertSucceeds(getDocs(query(collection(a, 'materials'), where('audience', '==', 'all'))));
+  await assertSucceeds(getDocs(query(collection(a, 'materials'), where('audience', '==', 'student-a'))));
+  await assertFails(getDoc(doc(b, 'materials', 'm-a')));
+  await assertFails(getDoc(doc(b, 'materials', 'm-a', 'chunks', '0')));
+  await assertFails(getDocs(query(collection(b, 'materials'), where('audience', '==', 'student-a'))));
+  await assertFails(getDocs(collection(b, 'materials')));
+  await assertFails(getDoc(doc(pending, 'materials', 'm-all')));
+  await assertFails(setDoc(doc(a, 'materials', 'mine'), material('all', { createdBy: 'a@school.test' })));
+  await assertFails(deleteDoc(doc(a, 'materials', 'm-all')));
+  await assertSucceeds(deleteDoc(doc(teacher, 'materials', 'm-a', 'chunks', '0')));
+  await assertSucceeds(deleteDoc(doc(teacher, 'materials', 'm-a')));
 });
