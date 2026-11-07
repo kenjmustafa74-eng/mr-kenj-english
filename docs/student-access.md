@@ -43,3 +43,29 @@ A reset message does not confirm the email address, approve a student, restore a
 1. Publish this version of `firestore.rules` to `general-english-c7371`. Do not publish the app first if you want students to be checked against the new rules immediately. If the app is published first, unapproved people still cannot pass the sign-in screen, and the teacher can sign in.
 2. Merge and publish the site. `enabled` stays true for this Firebase project.
 3. The teacher confirms `tchmk9@gmail.com`, signs in, and approves or removes students. Approving a student is what creates their grant. This repository does not approve anyone.
+
+## Student control panel
+
+The Teacher tab lists every student who has signed up. **Open control panel** shows one student:
+
+- approve or remove access;
+- a display name that only the teacher sees (stored as `name` on the grant, up to 60 characters);
+- their levels: **Same as class** or **Own settings** with Level A, B and C switches (see `docs/level-access.md`);
+- notes and homework sent only to that student, with an **Upload notes or homework** button.
+
+## Notes and homework
+
+The teacher uploads from the Teacher tab (for the whole class) or from a student's control panel (preselected for that student; the **For** box can still change it). Each item has a type (notes or homework), a title, optional level, due date (homework), instructions, a file and/or an `https://` link.
+
+- Files can be up to 5 MB: PDF, Word, PowerPoint, text, pictures or audio. Bigger files and videos should be shared as a link (for example Google Drive).
+- The file is stored in Firestore, split into pieces of at most 600 KB (`materials/{id}/chunks/{n}`), so no paid Firebase Storage plan is needed.
+- `materials/{id}` holds the details and `audience`: `all` or one student's uid.
+- Approved students see their items on the **Homework** tab and choose **Open** to download the file. A student never receives another student's items or file pieces; students who are waiting or removed receive none.
+- **Delete** removes the item and its file pieces.
+
+Students do not upload work back through this tab yet.
+
+## Publishing this version
+
+1. Publish the new `firestore.rules` to `general-english-c7371` (Firebase console → Firestore Database → Rules → paste → Publish). Until then the class switches and approvals keep working, but own level switches, display names and uploads are refused with a message.
+2. Publish the site. The offline cache name is `mr-kenj-v8`, so installed copies pick up the new page.

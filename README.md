@@ -12,8 +12,9 @@ GitHub still requires a repository admin to turn Pages on once: **Settings → P
 
 ## Notes
 - Each student's progress is saved in their own browser on their own device.
-- Class features (homework hand-in to the teacher, the class progress/teacher view, and "Ask Mr. Kenj" sentence checks) rely on the Claude-hosted version of the app and are hidden or inactive on GitHub Pages.
-- Level locks are one setting for every student. The app reads them from the General English Firebase project. `tchmk9@gmail.com` can change them after that address is confirmed. Until the teacher saves a lock, every level stays open. See `docs/level-access.md`. A lock closes a level inside the app; this public page is not a copy-protection system.
+- Students see notes and homework on the Homework tab. Handing work back in, class progress and "Ask Mr. Kenj" sentence checks still rely on the Claude-hosted version of the app.
+- The Teacher tab has a control panel for each student (approve, own level locks, display name) and an **Upload notes or homework** button for the whole class or one student. See `docs/student-access.md`.
+- Class level locks are one setting for every student; a student can also have their own locks. The app reads them from the General English Firebase project. `tchmk9@gmail.com` can change them after that address is confirmed. Until the teacher saves a lock, every level stays open. See `docs/level-access.md`. A lock closes a level inside the app; this public page is not a copy-protection system.
 
 ## Files
 - `index.html` — the whole app

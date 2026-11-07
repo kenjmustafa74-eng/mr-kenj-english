@@ -61,3 +61,14 @@ test('the saved web settings enable the General English project', () => {
   const text = fs.readFileSync(path.join(__dirname, '..', 'level-access.config.js'), 'utf8');
   assert.doesNotMatch(text, /measurementId|BEGIN PRIVATE KEY|private_key/);
 });
+
+test('rules: per-student locks, materials and file pieces are teacher-written and student-scoped', () => {
+  assert.match(rules, /hasOnly\(\['status', 'updatedAt', 'updatedBy', 'locks', 'name'\]\)/);
+  assert.match(rules, /validLockMap\(request\.resource\.data\.locks\)/);
+  assert.match(rules, /match \/materials\/\{mid\}/);
+  assert.match(rules, /allow create, update: if isTeacher\(\) && validMaterial\(\);/);
+  assert.match(rules, /resource\.data\.audience == 'all' \|\| resource\.data\.audience == request\.auth\.uid/);
+  assert.match(rules, /match \/chunks\/\{n\}/);
+  assert.match(rules, /request\.resource\.data\.data\.size\(\) <= 900000/);
+  assert.match(rules, /get\(\/databases\/\$\(database\)\/documents\/accessGrants\/\$\(request\.auth\.uid\)\)\.data\.status == 'approved'/);
+});

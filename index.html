@@ -874,6 +874,7 @@ const I={ // small inline icons
   gap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4M17 12h4"/><rect x="8" y="8" width="8" height="8" rx="1.5" stroke-dasharray="2 2"/></svg>',
   mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
   pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>',
   medal:'<svg viewBox="0 0 24 24"><path d="M7 2h4l2 6H9Z" fill="#2d5bff"/><path d="M17 2h-4l-2 6h4Z" fill="#e2513d"/><circle cx="12" cy="15" r="6" fill="#f2b31b"/><circle cx="12" cy="15" r="3.5" fill="none" stroke="#5a3f00" stroke-width="1.2"/></svg>'
 };
@@ -884,7 +885,8 @@ const S={db:null,user:null,assets:null,sample:null,uid:null,name:'',teacher:fals
   accent:lsGet('kenj-accent')||'en-GB',subFilter:'todo',
   accessCtl:null,accessCfg:{configured:false,reason:'missing',teacherEmails:[]},levelTeacher:false,teacherUnverified:false,teacherEmail:'',
   gate:'checking',fbUid:null,accessRequests:{},accessGrants:{},testGate:false,
-  fb:null,lockSaving:false,testMemory:false};
+  fb:null,lockSaving:false,testMemory:false,
+  studentLocks:null,studentName:'',materials:{},teacherStudent:null,uploadFor:null,uploading:null,savingStudent:null};
 function defaultProg(){return{xp:0,streak:0,best:0,lastDay:'',level:'A',cards:{},scores:{},days:{},games:0,perfect:0,hw:0,updatedAt:0};}
 let LSKEY='kenj-prog';
 function readLocal(k){try{return Object.assign(defaultProg(),JSON.parse(lsGet(k)||'{}'));}catch(e){return defaultProg();}}
@@ -903,7 +905,11 @@ function save(){
     catch(e){if(e&&e.code==='invalid_argument'){S.canWrite=false;render();}}
   },1200);
 }
-function accessFor(level){return S.accessCtl.accessFor(level);}
+function studentOwnLocks(){
+  if(S.gate!=='approved'&&S.gate!=='approved-offline') return null;
+  return S.studentLocks;
+}
+function accessFor(level){return KenjLevelAccess.studentAccessFor(studentOwnLocks(),level,lv=>S.accessCtl.accessFor(lv));}
 function accessSnap(){return S.accessCtl.snapshot();}
 function persistAccessCache(){
   const payload=S.accessCtl.cachePayload();
@@ -953,6 +959,7 @@ function lockedMessage(level,gate,lesson){
   const waiting=gate.reason==='checking';
   const title=waiting?name+' is waiting':name+' is locked';
   const msg=waiting?name+' cannot be opened until the class settings have loaded.':
+    gate.own?name+' is locked. Mr. Kenj has closed this level for you. Your words, scores and points are still saved. Ask Mr. Kenj when it will open.':
     name+' is locked. Mr. Kenj has closed this level for every student. Your words, scores and points are still saved. Passing a lesson does not open a locked level.';
   const where=lesson?'<p class="muted" style="margin:0">The link you opened is lesson '+lesson.n+' in '+esc(name)+'.</p>':'';
   return '<div class="panel lock-panel lv-'+level+'" id="level-locked"><div class="eyebrow">Level access</div><h3 style="font-size:22px">'+title+'</h3><p style="margin:0">'+msg+'</p>'+where+'</div>';
@@ -1023,19 +1030,28 @@ async function saveLevelLocks(next){
   }finally{S.lockSaving=false;render();}
 }
 function stopAccessWatch(){
+  stopMaterialsWatch();
   if(grantUnsub){grantUnsub();grantUnsub=null;}
   if(requestListUnsub){requestListUnsub();requestListUnsub=null;}
   if(grantListUnsub){grantListUnsub();grantListUnsub=null;}
 }
-function applyStoredGrant(uid,status){
+function studentLockKey(uid){return 'kenj-student-locks:'+uid;}
+function applyStoredGrant(uid,status,grant){
+  S.studentLocks=KenjLevelAccess.studentLocksFromGrant(grant);
+  S.studentName=grant&&typeof grant.name==='string'?grant.name:'';
+  if(S.studentLocks) lsSet(studentLockKey(uid),JSON.stringify(S.studentLocks));
+  else try{localStorage.removeItem(studentLockKey(uid));}catch(e){}
   const decision=KenjLevelAccess.accessDecision({signedIn:true,emailVerified:true,isTeacher:false,grantStatus:status||'',readFailed:false});
   S.gate=decision;
   rememberAccess(uid,decision==='approved'?'approved':decision==='revoked'?'revoked':'pending');
+  if(decision==='approved') watchStudentMaterials(uid); else {stopMaterialsWatch();S.materials={};}
+  if(S.game&&!gameAllowed(S.game)){S.game=null;clearInterval(matchTimer);toast('Mr. Kenj locked this level. Your saved progress is kept.');}
   if(!studyAllowed()) S.game=null;
   render();
 }
 function failGrantRead(uid){
   const remembered=rememberedAccess(uid);
+  try{const cached=JSON.parse(lsGet(studentLockKey(uid))||'null');S.studentLocks=KenjLevelAccess.validLockMap(cached)?cached:null;}catch(e){S.studentLocks=null;}
   S.gate=KenjLevelAccess.accessDecision({signedIn:true,emailVerified:true,isTeacher:false,readFailed:true,remembered:remembered});
   if(!studyAllowed()) S.game=null;
   render();
@@ -1051,8 +1067,8 @@ async function watchStudent(user){
   if(S.fbUid!==uid) return;
   grantUnsub=S.fb.onSnapshot(S.fb.doc(S.fb.db,'accessGrants',uid),snap=>{
     if(S.testGate||S.fbUid!==uid) return;
-    const status=snap.exists()&&snap.data()?snap.data().status:'';
-    applyStoredGrant(uid,status);
+    const data=snap.exists()&&snap.data()?snap.data():null;
+    applyStoredGrant(uid,data?data.status:'',data);
   },()=>{if(!S.testGate&&S.fbUid===uid) failGrantRead(uid);});
 }
 function watchTeacher(){
@@ -1063,13 +1079,17 @@ function watchTeacher(){
   },()=>{});
   grantListUnsub=S.fb.onSnapshot(S.fb.collection(S.fb.db,'accessGrants'),snap=>{
     S.accessGrants={};snap.forEach(d=>{S.accessGrants[d.id]=d.data()||{};});
-    if(S.gate==='teacher'&&S.view==='teacher'&&!S.game) render();
+    if(S.gate==='teacher'&&S.view==='teacher'&&!S.game&&!busyTyping()) render();
   },()=>{});
+  materialUnsubs.push(S.fb.onSnapshot(S.fb.collection(S.fb.db,'materials'),snap=>{
+    S.materials={};snap.forEach(d=>{S.materials[d.id]=Object.assign({id:d.id},d.data()||{});});
+    if((S.view==='teacher'||S.view==='homework')&&!S.game&&!busyTyping()&&!S.uploading) render();
+  },()=>{}));
 }
 function handleAuthUser(user){
   if(S.testGate) return;
   if(!user){
-    stopAccessWatch();bindFirebaseProgress(null);
+    stopAccessWatch();bindFirebaseProgress(null);S.studentLocks=null;S.studentName='';S.materials={};
     S.gate='signed-out';S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.game=null;render();return;
   }
   const listed=KenjLevelAccess.isTeacherEmail(user.email,S.accessCfg.teacherEmails);
@@ -1090,16 +1110,222 @@ function accessAdminHtml(){
     const req=S.accessRequests[uid]||{};
     const grant=S.accessGrants&&S.accessGrants[uid];
     const status=grant&&grant.status==='approved'?'Approved':grant&&grant.status==='revoked'?'Removed':'Waiting';
-    return '<div class="sub" id="access-row-'+esc(uid)+'"><div class="row" style="justify-content:space-between"><b>'+esc(req.email||'Student')+'</b><span class="pill">'+status+'</span></div><div class="row"><button class="btn sm primary" type="button" data-act="approve-student" data-uid="'+esc(uid)+'">Approve</button><button class="btn sm" type="button" data-act="revoke-student" data-uid="'+esc(uid)+'">Remove access</button></div></div>';
+    const own=KenjLevelAccess.studentLocksFromGrant(grant);
+    const levels=own?KenjLevelAccess.LEVEL_IDS.map(k=>k+(own[k]?' locked':' open')).join(' · '):'Same as class';
+    const name=grant&&grant.name?'<b>'+esc(grant.name)+'</b> <span class="small muted">'+esc(req.email||'')+'</span>':'<b>'+esc(req.email||'Student')+'</b>';
+    return '<div class="sub" id="access-row-'+esc(uid)+'"><div class="row" style="justify-content:space-between"><span style="overflow-wrap:anywhere">'+name+'</span><span class="pill'+(status==='Approved'?' good':status==='Removed'?' bad':' warn')+'">'+status+'</span></div><span class="small muted">Levels: '+levels+'</span><div class="row"><button class="btn sm primary" type="button" data-act="open-student" data-uid="'+esc(uid)+'">Open control panel</button>'+(status!=='Approved'?'<button class="btn sm" type="button" data-act="approve-student" data-uid="'+esc(uid)+'">Approve</button>':'<button class="btn sm" type="button" data-act="revoke-student" data-uid="'+esc(uid)+'">Remove access</button>')+'</div></div>';
   }).join(''):'<p class="muted" style="margin:0">No one has asked to join yet.</p>';
-  return '<div id="access-admin" style="display:grid;gap:8px;margin-top:12px"><h3 style="font-size:18px">Student access</h3><p class="small muted" style="margin:0">Only people you approve can study. You see the email they signed in with, and nothing more.</p>'+rows+'</div>';
+  return '<div id="access-admin" style="display:grid;gap:8px;margin-top:12px"><h3 style="font-size:18px">Students</h3><p class="small muted" style="margin:0">Only people you approve can study. Open a student\'s control panel to set their own levels and send them notes or homework.</p>'+rows+'</div>';
 }
 async function setStudentGrant(uid,status){
   if(S.gate!=='teacher'||!S.fb){toast('Only the confirmed teacher can change access.');return;}
   try{
-    await S.fb.setDoc(S.fb.doc(S.fb.db,'accessGrants',uid),{status:status,updatedAt:Date.now(),updatedBy:S.teacherEmail});
+    const doc=KenjLevelAccess.buildGrant(S.accessGrants[uid],{status:status},S.teacherEmail,S.accessCfg.teacherEmails,Date.now());
+    await S.fb.setDoc(S.fb.doc(S.fb.db,'accessGrants',uid),doc);S.accessGrants[uid]=doc;render();
     toast(status==='approved'?'Student approved.':'Access removed.');
   }catch(e){toast('Could not update access. The class rules were not changed.');}
+}
+/* ---------- per-student control panel ---------- */
+function studentLabel(uid){
+  const g=S.accessGrants[uid]||{},r=S.accessRequests[uid]||{};
+  return g.name||r.email||'Student';
+}
+async function writeGrant(uid,changes,okMsg){
+  if(S.gate!=='teacher'||!S.fb){toast('Only the confirmed teacher can change a student.');return false;}
+  if(S.savingStudent) return false;
+  let doc;
+  try{doc=KenjLevelAccess.buildGrant(S.accessGrants[uid],changes,S.teacherEmail,S.accessCfg.teacherEmails,Date.now());}
+  catch(e){toast('Only the confirmed teacher can change a student.');return false;}
+  S.savingStudent=uid;render();
+  try{await S.fb.setDoc(S.fb.doc(S.fb.db,'accessGrants',uid),doc);S.accessGrants[uid]=doc;toast(okMsg);return true;}
+  catch(e){toast(e&&String(e.code||'').indexOf('permission-denied')!==-1?'The server refused the change. Publish the new security rules first (see docs/student-access.md).':'Could not save. Nothing was changed.');return false;}
+  finally{S.savingStudent=null;render();}
+}
+function setStudentLockMode(uid,mode){
+  if(mode==='own'){
+    const cls=accessSnap().locks||KenjLevelAccess.emptyLocks();
+    writeGrant(uid,{locks:KenjLevelAccess.cloneLocks(cls)},'This student now has their own level settings.');
+  }else writeGrant(uid,{locks:null},'This student now follows the class level settings.');
+}
+function toggleStudentLock(uid,level){
+  const own=KenjLevelAccess.studentLocksFromGrant(S.accessGrants[uid]);
+  if(!own){toast('Choose "Own settings" first.');return;}
+  const next=KenjLevelAccess.toggleLock(own,level,!own[level]);
+  writeGrant(uid,{locks:next},LEVELS[level].name+(next[level]?' locked':' opened')+' for '+studentLabel(uid)+'.');
+}
+async function saveStudentName(uid,name){
+  await writeGrant(uid,{name:name},String(name||'').trim()?'Name saved.':'Name cleared.');
+}
+function viewStudentPanel(uid){
+  const req=S.accessRequests[uid],grant=S.accessGrants[uid];
+  const back='<div><button class="btn ghost sm" type="button" data-act="close-student">'+I.back.replace('<svg','<svg width="16" height="16"')+' All students</button></div>';
+  if(!req&&!grant) return '<section class="grid" style="gap:18px">'+back+'<div class="panel"><h2 style="font-size:24px">Student not found</h2><p class="muted" style="margin:0">This student has not signed up yet, or the list is still loading.</p></div></section>';
+  const status=grant&&grant.status==='approved'?'approved':grant&&grant.status==='revoked'?'removed':'waiting';
+  const own=KenjLevelAccess.studentLocksFromGrant(grant);
+  const cls=accessSnap().locks||KenjLevelAccess.emptyLocks();
+  const busy=S.savingStudent===uid?' disabled':'';
+  const email=(req&&req.email)||'';
+  const statusHtml='<span class="pill'+(status==='approved'?' good':status==='removed'?' bad':' warn')+'" id="student-status">'+(status==='approved'?'Approved':status==='removed'?'Access removed':'Waiting for approval')+'</span>';
+  const accessBtns=status==='approved'
+    ?'<button class="btn sm" type="button" data-act="revoke-student" data-uid="'+esc(uid)+'"'+busy+'>Remove access</button>'
+    :'<button class="btn sm primary" type="button" data-act="approve-student" data-uid="'+esc(uid)+'"'+busy+'>Approve</button>';
+  const mode='<div class="switch-row" role="group" aria-label="Where this student\'s levels come from">'+
+    '<button type="button" class="btn" data-act="student-lock-mode" data-mode="class" data-uid="'+esc(uid)+'" aria-pressed="'+(!own)+'"'+busy+'>Same as class<small>Follows the class switches</small></button>'+
+    '<button type="button" class="btn" data-act="student-lock-mode" data-mode="own" data-uid="'+esc(uid)+'" aria-pressed="'+(!!own)+'"'+busy+'>Own settings<small>Only for this student</small></button></div>';
+  const levels='<div class="switch-row" role="group" aria-label="Level locks for this student" id="student-locks">'+KenjLevelAccess.LEVEL_IDS.map(k=>{
+    const locked=own?!!own[k]:!!cls[k];
+    return '<button type="button" class="btn lv-'+k+'" data-act="toggle-student-lock" data-uid="'+esc(uid)+'" data-l="'+k+'" aria-pressed="'+locked+'"'+(own&&!busy?'':' disabled')+'>'+LEVELS[k].name+'<small>'+(locked?'Locked':'Open')+'</small></button>';
+  }).join('')+'</div>'+
+  '<p class="small muted" style="margin:0">'+(own?'These switches apply to this student only. The class switches no longer change this student.':'This student follows the class switches. Choose Own settings to lock or open levels for this student only.')+'</p>';
+  const mine=KenjLevelAccess.sortMaterials(Object.values(S.materials).filter(m=>m.audience===uid));
+  const forAll=Object.values(S.materials).filter(m=>m.audience==='all').length;
+  return '<section class="grid" style="gap:18px" id="student-panel">'+back+
+    '<div class="panel" style="display:grid;gap:12px"><div class="eyebrow">Student control panel</div>'+
+      '<div class="row" style="justify-content:space-between"><h2 style="font-size:26px;overflow-wrap:anywhere">'+esc(studentLabel(uid))+'</h2>'+statusHtml+'</div>'+
+      '<p class="muted" style="margin:0">'+(email?'Signed up as '+esc(email):'')+(req&&req.requestedAt?' · asked to join '+fmtDate(req.requestedAt):'')+'</p>'+
+      '<div class="row">'+accessBtns+'</div>'+
+      '<form class="row" id="student-name-form" data-uid="'+esc(uid)+'" style="gap:8px;align-items:flex-end"><div class="field" style="flex:1;min-width:180px"><label for="student-name">Display name (only you see it)</label><input type="text" id="student-name" maxlength="60" value="'+esc(grant&&grant.name||'')+'" placeholder="e.g. Ahmed – Group 2"></div><button class="btn sm" type="submit"'+busy+'>Save name</button></form>'+
+    '</div>'+
+    '<div class="panel" style="display:grid;gap:12px" id="student-levels-panel"><div class="eyebrow">Levels</div><h3 style="font-size:20px">Which levels can this student open?</h3>'+
+      (status!=='approved'?'<p class="small muted" style="margin:0">This student cannot study until you approve them. You can still prepare their levels.</p>':'')+mode+levels+'</div>'+
+    materialsTeacherPanel(uid,mine,forAll)+
+  '</section>';
+}
+
+/* ---------- notes and homework ---------- */
+let materialUnsubs=[];
+function stopMaterialsWatch(){materialUnsubs.forEach(u=>{try{u();}catch(e){}});materialUnsubs=[];}
+function watchStudentMaterials(uid){
+  if(!S.fb||materialUnsubs.length||!S.fb.query) return;
+  const col=S.fb.collection(S.fb.db,'materials');
+  const parts={all:{},mine:{}};
+  const merge=()=>{S.materials=Object.assign({},parts.all,parts.mine);if(S.view==='homework'&&!S.game&&!busyTyping())render();};
+  [['all','all'],['mine',uid]].forEach(([key,aud])=>{
+    materialUnsubs.push(S.fb.onSnapshot(S.fb.query(col,S.fb.where('audience','==',aud)),snap=>{
+      parts[key]={};snap.forEach(d=>{parts[key][d.id]=Object.assign({id:d.id},d.data()||{});});merge();
+    },()=>{}));
+  });
+}
+const fmtSize=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+function materialCard(m,teacher){
+  const kind=m.kind==='homework'?'<span class="pill warn">Homework</span>':'<span class="pill">Note</span>';
+  const who=teacher?(m.audience==='all'?'Whole class':'Only '+esc(studentLabel(m.audience))):'';
+  const meta=[who,m.level&&LEVELS[m.level]?LEVELS[m.level].name:'',m.due?'Due '+fmtDate(m.due+'T12:00'):'','Posted '+fmtDate(m.createdAt)].filter(Boolean).join(' · ');
+  const file=m.file?'<button class="btn sm primary" type="button" data-act="open-material" data-id="'+esc(m.id)+'">'+(S.downloading===m.id?'Opening…':'Open '+esc(m.file.name))+'</button><span class="small muted">'+fmtSize(m.file.size)+'</span>':'';
+  const link=m.link?'<a class="btn sm" href="'+esc(m.link)+'" target="_blank" rel="noopener noreferrer">Open link</a>':'';
+  const del=teacher?'<button class="btn sm ghost" type="button" data-act="del-material" data-id="'+esc(m.id)+'">'+(S.confirmDelMat===m.id?'Tap again to delete':'Delete')+'</button>':'';
+  return '<div class="sub material" data-id="'+esc(m.id)+'"><div class="row" style="justify-content:space-between;gap:8px"><b style="overflow-wrap:anywhere">'+esc(m.title)+'</b>'+kind+'</div>'+
+    (meta?'<span class="small muted">'+meta+'</span>':'')+
+    (m.details?'<p style="margin:0;white-space:pre-wrap">'+esc(m.details)+'</p>':'')+
+    ((file||link||del)?'<div class="row" style="gap:8px">'+file+link+del+'</div>':'')+'</div>';
+}
+function uploadForm(audience){
+  const up=S.uploading;
+  const students=Object.keys(S.accessRequests).concat(Object.keys(S.accessGrants)).filter((v,i,a)=>a.indexOf(v)===i);
+  const opts='<option value="all">Whole class</option>'+students.map(uid=>'<option value="'+esc(uid)+'"'+(audience===uid?' selected':'')+'>Only '+esc(studentLabel(uid))+'</option>').join('');
+  const dis=up?' disabled':'';
+  return '<form class="grid" id="material-form" style="gap:10px;margin-top:4px">'+
+    '<div class="row" style="gap:10px;align-items:flex-end"><div class="field" style="flex:1;min-width:140px"><label for="mat-kind">Type</label><select id="mat-kind"'+dis+'><option value="note">Notes</option><option value="homework">Homework</option></select></div>'+
+    '<div class="field" style="flex:2;min-width:180px"><label for="mat-audience">For</label><select id="mat-audience"'+dis+'>'+opts+'</select></div></div>'+
+    '<div class="field"><label for="mat-title">Title</label><input type="text" id="mat-title" maxlength="120" required placeholder="e.g. Unit 4 grammar notes"'+dis+'></div>'+
+    '<div class="row" style="gap:10px;align-items:flex-end"><div class="field" style="flex:1;min-width:140px"><label for="mat-level">Level (optional)</label><select id="mat-level"'+dis+'><option value="">Any level</option>'+KenjLevelAccess.LEVEL_IDS.map(k=>'<option value="'+k+'">'+LEVELS[k].name+'</option>').join('')+'</select></div>'+
+    '<div class="field" id="mat-due-wrap" style="flex:1;min-width:140px" hidden><label for="mat-due">Due date</label><input type="date" id="mat-due"'+dis+'></div></div>'+
+    '<div class="field"><label for="mat-details">Instructions or message (optional)</label><textarea id="mat-details" maxlength="2000" placeholder="What should students do?"'+dis+'></textarea></div>'+
+    '<div class="field"><label for="mat-file">File: PDF, Word, picture or audio, up to 5 MB (optional)</label><input type="file" id="mat-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,image/*,audio/*"'+dis+'></div>'+
+    '<div class="field"><label for="mat-link">Or a link, for bigger files or videos (optional)</label><input type="url" id="mat-link" maxlength="500" placeholder="https://drive.google.com/…"'+dis+'></div>'+
+    '<p class="feedback bad" id="mat-error" role="alert" hidden></p>'+
+    '<div class="row"><button class="btn primary" type="submit"'+dis+'>'+(up?esc(up):'Upload')+'</button><button class="btn" type="button" data-act="upload-cancel"'+dis+'>Cancel</button></div></form>';
+}
+function materialsTeacherPanel(audience,list,forAll){
+  if(S.gate!=='teacher'||!S.levelTeacher) return '';
+  const forStudent=audience!=='all';
+  list=list||KenjLevelAccess.sortMaterials(Object.values(S.materials));
+  const open=S.uploadFor===audience;
+  const head=forStudent
+    ?'<div class="eyebrow">Notes and homework</div><h3 style="font-size:20px">Just for '+esc(studentLabel(audience))+'</h3><p class="small muted" style="margin:0">'+(forAll?forAll+' item'+(forAll===1?' is':'s are')+' also shared with the whole class.':'Nothing is shared with the whole class yet.')+'</p>'
+    :'<div class="eyebrow">Notes and homework</div><h3 style="font-size:20px">Upload notes and homework</h3><p class="small muted" style="margin:0">Send a file or a link to the whole class or to one student. Students see it on their Homework tab.</p>';
+  const btn=open?'':'<div><button class="btn primary" type="button" data-act="upload-open" data-audience="'+esc(audience)+'" id="upload-open">'+I.up.replace('<svg','<svg width="18" height="18" style="flex:none"')+' Upload notes or homework</button></div>';
+  return '<div class="panel" style="display:grid;gap:12px" id="materials-panel">'+head+btn+(open?uploadForm(audience):'')+
+    (list.length?'<div class="grid g2">'+list.map(m=>materialCard(m,true)).join('')+'</div>':'<p class="muted" style="margin:0">Nothing uploaded yet.</p>')+'</div>';
+}
+function viewMaterialsForStudent(){
+  const list=KenjLevelAccess.sortMaterials(Object.values(S.materials));
+  if(S.gate==='teacher') return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Notes and homework</h2><p class="muted" style="margin:4px 0 0">Everything you have uploaded. Add more on the Teacher tab.</p></div>'+(list.length?'<div class="grid g2">'+list.map(m=>materialCard(m,true)).join('')+'</div>':'<div class="panel muted">Nothing uploaded yet.</div>')+'</section>';
+  const hw=list.filter(m=>m.kind==='homework'),notes=list.filter(m=>m.kind!=='homework');
+  const sec=(title,items,empty)=>'<div style="display:grid;gap:10px"><h3 style="font-size:20px">'+title+'</h3>'+(items.length?'<div class="grid g2">'+items.map(m=>materialCard(m,false)).join('')+'</div>':'<div class="panel muted">'+empty+'</div>')+'</div>';
+  return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Notes and homework</h2><p class="muted" style="margin:4px 0 0">Files and messages from Mr. Kenj'+(S.studentName?' for '+esc(S.studentName):'')+'. Tap Open to download.</p></div>'+
+    sec('Homework',hw,'No homework right now.')+sec('Notes',notes,'No notes yet.')+'</section>';
+}
+function readFileBytes(file){
+  return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(new Uint8Array(r.result));r.onerror=()=>reject(r.error||new Error('read'));r.readAsArrayBuffer(file);});
+}
+async function uploadMaterial(form){
+  const err=msg=>{const b=$('#mat-error');if(b){b.hidden=!msg;b.textContent=msg||'';}};
+  if(S.uploading) return;
+  if(S.gate!=='teacher'||!S.fb){err('Only the confirmed teacher can upload.');return;}
+  const fileIn=$('#mat-file');const file=fileIn&&fileIn.files&&fileIn.files[0]||null;
+  const input={kind:$('#mat-kind').value,audience:$('#mat-audience').value,title:$('#mat-title').value,level:$('#mat-level').value,due:$('#mat-due').value,details:$('#mat-details').value,link:$('#mat-link').value,
+    file:file?{name:file.name,type:file.type,size:file.size}:null};
+  const built=KenjLevelAccess.buildMaterial(input,S.teacherEmail,S.accessCfg.teacherEmails,Date.now());
+  if(!built.ok){err(built.error);return;}
+  err('');
+  const keep=Object.assign({},input);
+  const ref=S.fb.doc(S.fb.collection(S.fb.db,'materials'));
+  const setBusy=msg=>{S.uploading=msg;const b=form.querySelector('button[type=submit]');if(b)b.textContent=msg;form.querySelectorAll('input,select,textarea,button').forEach(x=>x.disabled=true);};
+  setBusy('Preparing…');
+  const written=[];
+  try{
+    if(file){
+      const parts=KenjLevelAccess.splitBytes(await readFileBytes(file));
+      for(let i=0;i<parts.length;i++){
+        setBusy('Uploading '+(i+1)+' of '+parts.length+'…');
+        const cref=S.fb.doc(S.fb.db,'materials',ref.id,'chunks',String(i));
+        await S.fb.setDoc(cref,{data:parts[i]});written.push(cref);
+      }
+    }
+    setBusy('Saving…');
+    await S.fb.setDoc(ref,built.doc);
+    S.materials[ref.id]=Object.assign({id:ref.id},built.doc);
+    S.uploading=null;S.uploadFor=null;render();
+    toast((built.doc.kind==='homework'?'Homework':'Notes')+' sent to '+(built.doc.audience==='all'?'the whole class':studentLabel(built.doc.audience))+'.');
+  }catch(e){
+    for(const c of written){try{await S.fb.deleteDoc(c);}catch(x){}}
+    S.uploading=null;render();
+    const f={kind:'mat-kind',audience:'mat-audience',title:'mat-title',level:'mat-level',due:'mat-due',details:'mat-details',link:'mat-link'};
+    Object.keys(f).forEach(k=>{const el=document.getElementById(f[k]);if(el)el.value=keep[k]||'';});
+    const dw=$('#mat-due-wrap');if(dw)dw.hidden=keep.kind!=='homework';
+    err(e&&String(e.code||'').indexOf('permission-denied')!==-1?'The server refused the upload. Publish the new security rules first (see docs/student-access.md).':'The upload did not finish. Check your connection and try again. Choose the file again.');
+  }
+}
+async function deleteMaterial(id){
+  if(S.gate!=='teacher'||!S.fb) return;
+  if(S.confirmDelMat!==id){S.confirmDelMat=id;render();return;}
+  S.confirmDelMat=null;
+  const m=S.materials[id];
+  try{
+    const n=m&&m.file?m.file.chunks:0;
+    await S.fb.deleteDoc(S.fb.doc(S.fb.db,'materials',id));
+    for(let i=0;i<n;i++){try{await S.fb.deleteDoc(S.fb.doc(S.fb.db,'materials',id,'chunks',String(i)));}catch(e){}}
+    delete S.materials[id];render();toast('Deleted.');
+  }catch(e){toast('Could not delete. Try again.');}
+}
+async function downloadMaterial(id){
+  const m=S.materials[id];
+  if(!m||!m.file||!S.fb||S.downloading) return;
+  S.downloading=id;render();
+  try{
+    const parts=[];
+    for(let i=0;i<m.file.chunks;i++){
+      const snap=await S.fb.getDoc(S.fb.doc(S.fb.db,'materials',id,'chunks',String(i)));
+      if(!snap.exists()) throw new Error('missing');
+      parts.push(snap.data().data);
+    }
+    const blob=new Blob([KenjLevelAccess.joinChunks(parts)],{type:m.file.type||'application/octet-stream'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=m.file.name||'file';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(e){toast('Could not open that file. Check your connection and try again.');}
+  finally{S.downloading=null;render();}
 }
 function teacherAuthMessage(code){return KenjLevelAccess.signInMessage(code);}
 async function signInTeacher(email,password){
@@ -1139,7 +1365,7 @@ async function startLevelAccess(){
     const app=appMod.initializeApp(config.firebase);
     const auth=authMod.getAuth(app);
     const db=fsMod.getFirestore(app);
-    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,signIn:authMod.signInWithEmailAndPassword,createAccount:authMod.createUserWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification,resetPassword:authMod.sendPasswordResetEmail};
+    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,query:fsMod.query,where:fsMod.where,getDocs:fsMod.getDocs,deleteDoc:fsMod.deleteDoc,signIn:authMod.signInWithEmailAndPassword,createAccount:authMod.createUserWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification,resetPassword:authMod.sendPasswordResetEmail};
     const ref=fsMod.doc(db,'settings','levelAccess');
     if(accessUnsub){accessUnsub();accessUnsub=null;}
     accessUnsub=fsMod.onSnapshot(ref,snap=>{
@@ -1220,6 +1446,9 @@ function applyHash(){
   else if((S.view==='learn'||S.view==='practice')&&parsed.level){S.lesson=null;setLevel(parsed.level);}
   else if(S.view==='learn') S.lesson=null;
   else S.lesson=null;
+  const m=/^#?teacher\/student\/([^\/?#]+)/i.exec(location.hash||'');
+  S.teacherStudent=S.view==='teacher'&&m?decodeURIComponent(m[1]):null;
+  S.uploadFor=null;
 }
 function route(){applyHash();render();}
 window.addEventListener('hashchange',route);
@@ -1344,7 +1573,7 @@ function render(){
   if(S.game){m.innerHTML=accessBanner()+renderGame();afterGameRender();return;}
   let html=accessBanner();
   if(S.ready&&S.db&&S.canWrite===false) html+='<div class="banner">Your progress is saved only on this device. Ask Mr. Kenj to share the app with you as a <b>Contributor</b> so your points, homework and progress are saved for him to see.</div>';
-  if(S.ready&&!S.db) html+='<div class="banner">You are using the guest version: games work, and progress is saved on this device only. Open the app from Mr. Kenj\'s link while signed in to hand in homework.</div>';
+  if(S.ready&&!S.db&&!S.fb) html+='<div class="banner">You are using the guest version: games work, and progress is saved on this device only. Open the app from Mr. Kenj\'s link while signed in to hand in homework.</div>';
   html+=({learn:viewLearn,practice:viewPractice,homework:viewHomework,progress:viewProgress,teacher:viewTeacher}[S.view])();
   m.innerHTML=html;
   if(S.view==='teacher') hydrateTeacher();
@@ -1513,7 +1742,7 @@ function renderResult(){
 
 /* ---------- HOMEWORK ---------- */
 function viewHomework(){
-  if(!S.db) return '<section class="panel"><h2 style="font-size:24px">Homework</h2><p class="muted">Homework needs the shared version of the app. Open Mr. Kenj\'s link while signed in.</p></section>';
+  if(!S.db) return viewMaterialsForStudent();
   const subsBy={};S.mySubs.forEach(s=>{(subsBy[s.assignmentId]=subsBy[s.assignmentId]||[]).push(s);});
   const today=ymd();
   const list=S.assignments.slice().sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9')));
@@ -1599,7 +1828,11 @@ function leaderboard(){
 
 /* ---------- TEACHER ---------- */
 function viewTeacher(){
-  if(!(S.db&&S.teacher)) return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Teacher</h2><p class="muted" style="margin:4px 0 0">Level locks for every student live here. Homework hand-in and the class list still need the hosted class tools.</p></div>'+viewLevelAccessPanel()+'</section>';
+  if(!(S.db&&S.teacher)){
+    if(S.gate==='teacher'&&S.levelTeacher&&S.teacherStudent) return viewStudentPanel(S.teacherStudent);
+    const extra=S.gate==='teacher'&&S.levelTeacher?materialsTeacherPanel('all'):'';
+    return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Teacher</h2><p class="muted" style="margin:4px 0 0">Class level locks, your students, and notes and homework live here.</p></div>'+viewLevelAccessPanel()+extra+'</section>';
+  }
   const students=S.classProg;
   const opts=LESSONS.map(l=>'<option value="'+l.id+'">'+LEVELS[l.level].name+' · L'+l.n+' '+esc(l.title)+'</option>').join('');
   const rows=students.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(r=>{const n=(S.profiles[r.id]&&S.profiles[r.id].name)||'Student';const subs=(S.subs[r.id]||[]);
@@ -1646,7 +1879,7 @@ document.addEventListener('click',async e=>{
     const l=t.dataset.l;
     if(KenjLevelAccess.LEVEL_IDS.indexOf(l)===-1) return;
     const hash=S.view==='practice'?'#practice/'+l:'#level/'+l;
-    if(location.hash===hash){S.prog.level=l;if(S.view==='learn')S.lesson=null;save();const gate=accessFor(l);if(gate.reason==='locked')toast(LEVELS[l].name+' is locked for every student. Your progress is kept.');render();}
+    if(location.hash===hash){S.prog.level=l;if(S.view==='learn')S.lesson=null;save();const gate=accessFor(l);if(gate.reason==='locked')toast(LEVELS[l].name+(gate.own?' is locked for you.':' is locked for every student.')+' Your progress is kept.');render();}
     else location.hash=hash;
     return;}
   if(a==='open-lesson'){
@@ -1665,10 +1898,18 @@ document.addEventListener('click',async e=>{
     const base=st.locks||KenjLevelAccess.emptyLocks();
     saveLevelLocks(KenjLevelAccess.toggleLock(base,t.dataset.l,!base[t.dataset.l]));
     return;}
-  if(a==='level-sign-out'){S.testGate=false;S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.gate='signed-out';S.verifySendFailed=false;S.accountError='';stopAccessWatch();bindFirebaseProgress(null);if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='level-sign-out'){S.studentLocks=null;S.studentName='';S.materials={};S.teacherStudent=null;S.uploadFor=null;S.testGate=false;S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.gate='signed-out';S.verifySendFailed=false;S.accountError='';stopAccessWatch();bindFirebaseProgress(null);if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
   if(a==='auth-mode'){const mode=t.dataset.mode==='create'?'create':'sign-in';if(S.authMode===mode||accountSending||resetSending)return;S.authMode=mode;S.accountError='';S.resetNotice=null;render();const focus=$('#teacher-email');if(focus)focus.focus();return;}
   if(a==='forgot-password'){forgotPassword();return;}
   if(a==='approve-student'){setStudentGrant(t.dataset.uid,'approved');return;}
+  if(a==='open-student'){location.hash='teacher/student/'+encodeURIComponent(t.dataset.uid);window.scrollTo(0,0);return;}
+  if(a==='close-student'){location.hash='teacher';return;}
+  if(a==='student-lock-mode'){setStudentLockMode(t.dataset.uid,t.dataset.mode);return;}
+  if(a==='toggle-student-lock'){toggleStudentLock(t.dataset.uid,t.dataset.l);return;}
+  if(a==='upload-open'){S.uploadFor=t.dataset.audience||'all';render();const f=$('#mat-title');if(f)f.focus();return;}
+  if(a==='upload-cancel'){if(S.uploading)return;S.uploadFor=null;render();return;}
+  if(a==='del-material'){deleteMaterial(t.dataset.id);return;}
+  if(a==='open-material'){downloadMaterial(t.dataset.id);return;}
   if(a==='revoke-student'){setStudentGrant(t.dataset.uid,'revoked');return;}
   if(a==='send-verify'){
     const user=S.fb&&S.fb.auth&&S.fb.auth.currentUser;
@@ -1717,13 +1958,16 @@ document.addEventListener('click',async e=>{
     return;}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t=e.target.closest&&e.target.closest('[data-act=flip]');if(t){e.preventDefault();t.click();}}});
-document.addEventListener('change',e=>{if(e.target.id==='accent'){S.accent=e.target.value;lsSet('kenj-accent',S.accent);}});
+document.addEventListener('change',e=>{if(e.target.id==='accent'){S.accent=e.target.value;lsSet('kenj-accent',S.accent);}
+  if(e.target.id==='mat-kind'){const due=$('#mat-due-wrap');if(due)due.hidden=e.target.value!=='homework';}});
 document.addEventListener('submit',async e=>{
   const f=e.target;
   if(f.id==='level-teacher-form'){e.preventDefault();const email=$('#teacher-email').value,password=$('#teacher-password').value;const pw=$('#teacher-password');if(pw)pw.value='';if(S.authMode==='create')createAccount(email,password);else signInTeacher(email,password);return;}
   if(f.id==='spell-form'){e.preventDefault();const g=S.game;if(!g||g.answered)return;const w=g.words[g.i];const v=$('#spell-in').value;if(!v.trim())return;
     g.answered=true;const ok=norm(v)===norm(w.w);grade(w,ok);const fb=$('#fb');fb.className='feedback '+(ok?'good':'bad');fb.textContent=ok?'Correct! +10':'It is spelled: '+w.w;setTimeout(next,ok?1000:2200);return;}
   if(f.classList.contains('hw-form')){e.preventDefault();await handIn(f);return;}
+  if(f.id==='material-form'){e.preventDefault();await uploadMaterial(f);return;}
+  if(f.id==='student-name-form'){e.preventDefault();await saveStudentName(f.dataset.uid,($('#student-name')||{}).value||'');return;}
   if(f.id==='assign-form'){e.preventDefault();const title=$('#as-title').value.trim();if(!title)return;
     try{await S.db.collection('assignments').add({title,lesson:$('#as-lesson').value,due:$('#as-due').value,details:$('#as-details').value.trim(),createdAt:Date.now()});toast('Homework posted');f.reset();}
     catch(err){toast('Could not post: '+(err.message||err.code));}return;}

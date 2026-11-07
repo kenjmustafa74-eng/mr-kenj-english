@@ -262,3 +262,62 @@ test('deep links and review words follow the lock', () => {
   assert.equal(access.canStartScope('level', 'B', accessFor).open, false);
   assert.equal(access.canStartScope('review', 'B', accessFor).reason, 'review');
 });
+
+test('a student grant can carry its own level locks and a name', () => {
+  const T = 'tchmk9@gmail.com';
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 1, updatedBy: T, locks: { A: false, B: true, C: false } }, T), true);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 1, updatedBy: T, name: 'Ahmed' }, T), true);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 1, updatedBy: T, locks: { A: false, B: true } }, T), false);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 1, updatedBy: T, locks: { A: 'no', B: true, C: false } }, T), false);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 1, updatedBy: T, extra: 1 }, T), false);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 1, updatedBy: T, name: 'x'.repeat(61) }, T), false);
+});
+
+test('own locks decide a student\'s levels; without them the class locks apply', () => {
+  const classAccess = (lv) => (lv === 'B' ? { open: false, reason: 'locked' } : { open: true, reason: 'open' });
+  const own = access.studentLocksFromGrant({ status: 'approved', locks: { A: false, B: false, C: true } });
+  assert.deepEqual(access.studentAccessFor(own, 'B', classAccess), { open: true, reason: 'open', own: true });
+  assert.deepEqual(access.studentAccessFor(own, 'C', classAccess), { open: false, reason: 'locked', own: true });
+  assert.deepEqual(access.studentAccessFor(null, 'B', classAccess), { open: false, reason: 'locked' });
+  assert.equal(access.studentAccessFor(own, 'D', classAccess).open, false);
+  assert.equal(access.studentLocksFromGrant({ status: 'approved' }), null);
+});
+
+test('buildGrant keeps the other fields and only a listed teacher can build one', () => {
+  const T = 'tchmk9@gmail.com';
+  const prev = { status: 'approved', updatedAt: 1, updatedBy: T, locks: { A: false, B: true, C: true }, name: 'Sara' };
+  const revoked = access.buildGrant(prev, { status: 'revoked' }, T, [T], 5);
+  assert.deepEqual(revoked, { status: 'revoked', updatedAt: 5, updatedBy: T, locks: { A: false, B: true, C: true }, name: 'Sara' });
+  const back = access.buildGrant(prev, { locks: null }, T, [T], 6);
+  assert.equal('locks' in back, false);
+  assert.equal(back.name, 'Sara');
+  const cleared = access.buildGrant(prev, { name: '   ' }, T, [T], 7);
+  assert.equal('name' in cleared, false);
+  assert.equal(access.validGrant(revoked, T), true);
+  assert.throws(() => access.buildGrant(prev, {}, 'someone@else.test', [T], 8), /teacher/);
+});
+
+test('notes and homework: checks, limits and file pieces', () => {
+  const T = 'tchmk9@gmail.com';
+  const ok = access.buildMaterial({ kind: 'homework', title: ' Page 12 ', audience: 'uid1', due: '2026-11-15', file: { name: 'a.pdf', type: 'application/pdf', size: 1300000 } }, T, [T], 9);
+  assert.equal(ok.ok, true);
+  assert.equal(ok.doc.title, 'Page 12');
+  assert.equal(ok.doc.file.chunks, 3);
+  assert.equal(ok.doc.createdBy, T);
+  assert.equal(access.buildMaterial({ kind: 'note', title: 'x', due: '2026-11-15', details: 'hi' }, T, [T]).doc.due, '');
+  assert.equal(access.buildMaterial({ title: '' , details: 'a' }, T, [T]).ok, false);
+  assert.equal(access.buildMaterial({ title: 'x' }, T, [T]).ok, false);
+  assert.equal(access.buildMaterial({ title: 'x', link: 'javascript:alert(1)' }, T, [T]).ok, false);
+  assert.equal(access.buildMaterial({ title: 'x', link: 'https://drive.google.com/x' }, T, [T]).ok, true);
+  assert.equal(access.buildMaterial({ title: 'x', file: { name: 'big', size: access.MAX_FILE_BYTES + 1 } }, T, [T]).ok, false);
+  assert.equal(access.buildMaterial({ title: 'x', details: 'a', audience: 'a/b' }, T, [T]).ok, false);
+  assert.equal(access.buildMaterial({ title: 'x', details: 'a' }, 'student@x.test', [T]).ok, false);
+  assert.ok(access.MAX_CHUNKS <= 9);
+  const bytes = new Uint8Array(1500000).map((_, i) => (i * 13) % 256);
+  const parts = access.splitBytes(bytes);
+  assert.equal(parts.length, access.chunkCount(bytes.length));
+  parts.forEach((p) => assert.ok(p.length <= 900000));
+  assert.deepEqual(Array.from(access.joinChunks(parts)), Array.from(bytes));
+  assert.equal(access.materialVisibleTo({ audience: 'all' }, 'u1'), true);
+  assert.equal(access.materialVisibleTo({ audience: 'u2' }, 'u1'), false);
+});
