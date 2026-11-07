@@ -100,6 +100,14 @@ main{padding-block:24px 64px;display:grid;gap:24px}
 .pill.good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 .pill.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
 .pill.warn{background:color-mix(in srgb,var(--a) 25%,transparent);color:var(--a-ink)}
+.lvl-switch button.is-locked{border-color:var(--bad)}
+.lvl-switch button.is-locked small{color:var(--bad)}
+.lock-panel{display:grid;gap:8px}
+.switch-row{display:flex;gap:8px;flex-wrap:wrap}
+.switch-row button{display:inline-flex;flex-direction:column;align-items:flex-start}
+.switch-row button small{font-weight:400;color:var(--muted)}
+.switch-row button[aria-pressed="true"]{border-color:var(--bad)}
+.switch-row button[aria-pressed="true"] small{color:var(--bad)}
 /* word list */
 .words{display:grid;gap:8px}
 .word{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
@@ -817,6 +825,7 @@ wisdom|knowledge from experience|Wisdom comes with age.
 grateful|thankful|I'm grateful for my family.
 </script>
 
+<script src="level-access.js"></script>
 <script>
 (function(){
 "use strict";
@@ -870,11 +879,15 @@ const I={ // small inline icons
 /* ---------- state ---------- */
 const S={db:null,user:null,assets:null,sample:null,uid:null,name:'',teacher:false,canWrite:null,ready:false,
   prog:null,view:'learn',lesson:null,game:null,assignments:[],mySubs:[],classProg:[],profiles:{},subs:{},
-  accent:lsGet('kenj-accent')||'en-GB',subFilter:'todo'};
+  accent:lsGet('kenj-accent')||'en-GB',subFilter:'todo',
+  accessCtl:null,accessCfg:{configured:false,reason:'missing',teacherEmails:[]},levelTeacher:false,teacherUnverified:false,teacherEmail:'',
+  fb:null,lockSaving:false,testMemory:false};
 function defaultProg(){return{xp:0,streak:0,best:0,lastDay:'',level:'A',cards:{},scores:{},days:{},games:0,perfect:0,hw:0,updatedAt:0};}
 let LSKEY='kenj-prog';
 function readLocal(k){try{return Object.assign(defaultProg(),JSON.parse(lsGet(k)||'{}'));}catch(e){return defaultProg();}}
 S.prog=readLocal(LSKEY);
+S.accessCtl=KenjLevelAccess.createController();
+try{const cached=lsGet(KenjLevelAccess.CACHE_KEY);if(cached)S.accessCtl.restoreCache(JSON.parse(cached));}catch(e){}
 
 let saveT=null;
 function save(){
@@ -886,6 +899,204 @@ function save(){
     try{await S.db.doc('progress/'+S.uid).set(S.prog);}
     catch(e){if(e&&e.code==='invalid_argument'){S.canWrite=false;render();}}
   },1200);
+}
+function accessFor(level){return S.accessCtl.accessFor(level);}
+function accessSnap(){return S.accessCtl.snapshot();}
+function persistAccessCache(){
+  const payload=S.accessCtl.cachePayload();
+  if(payload) lsSet(KenjLevelAccess.CACHE_KEY,JSON.stringify(payload));
+  else try{localStorage.removeItem(KenjLevelAccess.CACHE_KEY);}catch(e){}
+}
+function clearAccessStored(){
+  try{localStorage.removeItem(KenjLevelAccess.CACHE_KEY);localStorage.removeItem(KenjLevelAccess.FLAG_KEY);}catch(e){}
+}
+function onAccessChanged(){
+  persistAccessCache();
+  if(S.game&&!gameAllowed(S.game)){S.game=null;clearInterval(matchTimer);toast('Mr. Kenj locked this level. Your saved progress is kept.');}
+  render();
+}
+function gameAllowed(g){
+  if(!g) return false;
+  if(g.scope==='review') return g.words.every(w=>accessFor(w.lesson[0]).open);
+  return KenjLevelAccess.canStartScope(g.scope,S.prog.level,lv=>accessFor(lv)).open;
+}
+function openTricky(){return KenjLevelAccess.filterWordsByAccess(trickyWords(),lv=>accessFor(lv));}
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src=src;s.onload=()=>resolve();s.onerror=()=>reject(new Error('missing'));
+    document.head.appendChild(s);
+  });
+}
+function accessBanner(){
+  const st=accessSnap();
+  if(st.mode==='booting'||st.mode==='checking') return '<div class="banner" id="level-access-status">Checking which levels Mr. Kenj has opened. Lessons stay closed until that check finishes.</div>';
+  if(st.mode==='unconfigured'){
+    const teacher=S.accessCfg.teacherEmails&&S.accessCfg.teacherEmails[0];
+    const why=S.accessCfg.reason==='disabled'&&S.accessCfg.firebaseReady&&teacher?'Firebase web settings are saved and '+esc(teacher)+' is the only teacher address. Level locks stay switched off until sign-in, Firestore, and the security rules are in place.':
+      S.accessCfg.reason==='disabled'&&S.accessCfg.firebaseReady?'Firebase web settings are saved, but level locks are switched off until a teacher is listed and the security rules are deployed.':
+      S.accessCfg.reason==='disabled'?'The settings file is present, but level locks are turned off.':
+      S.accessCfg.reason==='placeholder'?'The settings file still has placeholder text, so level locks are not connected.':
+      S.accessCfg.reason==='no-teacher-email'?'The settings file has no teacher email yet, so level locks are not connected.':
+      'Level locks are not connected yet.';
+    return '<div class="banner" id="level-access-status">'+why+' Every level is open on this device only. This is not a setting for the whole class.</div>';
+  }
+  if(st.mode==='unknown') return '<div class="banner" id="level-access-status">The class level settings could not be loaded, and this device has not seen them before. Lessons stay available here until the first successful check. The class settings have not been changed.</div>';
+  if(st.mode==='cached') return '<div class="banner" id="level-access-status">Showing the last level settings saved on this device. A locked level stays locked until a newer update arrives.</div>';
+  return '';
+}
+function lockedMessage(level,gate,lesson){
+  const name=LEVELS[level].name;
+  const waiting=gate.reason==='checking';
+  const title=waiting?name+' is waiting':name+' is locked';
+  const msg=waiting?name+' cannot be opened until the class settings have loaded.':
+    name+' is locked. Mr. Kenj has closed this level for every student. Your words, scores and points are still saved. Passing a lesson does not open a locked level.';
+  const where=lesson?'<p class="muted" style="margin:0">The link you opened is lesson '+lesson.n+' in '+esc(name)+'.</p>':'';
+  return '<div class="panel lock-panel lv-'+level+'" id="level-locked"><div class="eyebrow">Level access</div><h3 style="font-size:22px">'+title+'</h3><p style="margin:0">'+msg+'</p>'+where+'</div>';
+}
+function levelLockButtons(){
+  const st=accessSnap();
+  const locks=st.locks||KenjLevelAccess.emptyLocks();
+  return '<div class="switch-row" role="group" aria-label="Level locks for every student">'+KenjLevelAccess.LEVEL_IDS.map(k=>{
+    const locked=!!locks[k];
+    return '<button type="button" class="btn lv-'+k+'" data-act="toggle-lock" data-l="'+k+'" aria-pressed="'+locked+'"'+(st.canSave&&S.levelTeacher&&!S.lockSaving?'':' disabled')+'>'+LEVELS[k].name+'<small>'+(locked?'Locked':'Open')+'</small></button>';
+  }).join('')+'</div>';
+}
+function viewLevelAccessPanel(){
+  const st=accessSnap();
+  if(!st.configured){
+    const project=S.accessCfg.firebaseReady&&S.accessCfg.projectId?esc(S.accessCfg.projectId):'';
+    const teacher=S.accessCfg.teacherEmails&&S.accessCfg.teacherEmails[0]?esc(S.accessCfg.teacherEmails[0]):'';
+    const reason=project&&teacher?'Firebase web settings are saved for '+project+'. The only account that can write, once the rules are deployed, is '+teacher+'. Level locks are not live, so no lock switch is shown. Sign-in and Firestore are not ready, and these rules have not been deployed.':
+      project?'Firebase web settings are saved for '+project+'. Level locks are not live, so no lock switch is shown. No teacher email or user id is listed. Writes stay denied until that teacher is added here and in the security rules, and those rules are deployed.':
+      S.accessCfg.reason==='disabled'?'A settings file is present, but level locks are turned off. No lock switch is shown.':
+      S.accessCfg.reason==='placeholder'?'The settings file still has placeholder text, so it is not connected. No lock switch is shown.':
+      S.accessCfg.reason==='no-teacher-email'?'The settings file has no real teacher email yet, so it is not connected. No lock switch is shown.':
+      'Level locks are not connected. There is no shared store for this copy, so no lock switch is shown. A switch kept in this browser would not change other students\' devices.';
+    const follow=project?'Every level stays open on this device. Passing a lesson does not open a locked level. The remaining steps are in docs/level-access.md.':'Level locks for every student need a shared store. Saved progress stays on each device. Passing a lesson does not open a locked level. The setup steps are in docs/level-access.md.';
+    return '<div class="panel" id="level-access-panel"><div class="eyebrow">Level access</div><h3 style="font-size:20px">Class level locks are not live</h3><p style="margin:0">'+reason+'</p><p style="margin:8px 0 0">'+follow+'</p><p class="small muted" style="margin:8px 0 0">This app is a public web page. A lock can close a level inside the app. It cannot stop someone from reading the page file.</p></div>';
+  }
+  let body='';
+  if(st.mode==='checking'||st.mode==='booting') body+='<p style="margin:0">Current settings are still loading. Switches stay off until they load, so a blank page cannot overwrite the class.</p>';
+  else if(!st.canSave) body+='<p style="margin:0">Changes wait until the settings store is connected, so an offline save cannot overwrite the class. A locked level stays locked.</p>';
+  if(S.teacherUnverified){
+    body+='<div class="banner" id="teacher-unverified"><b>Confirm this address before changing locks.</b> Signed in as '+esc(S.teacherEmail)+'. Firebase has not confirmed this address yet, so this account cannot write the class settings. Open the confirmation message, then choose I have confirmed it. Level locks stay unchanged until then.</div><div class="row" style="margin-top:8px"><button class="btn primary" type="button" data-act="send-verify">Send confirmation email</button><button class="btn" type="button" data-act="recheck-verify">I have confirmed it</button><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
+  }else if(!S.levelTeacher){
+    body+='<p style="margin:8px 0 0">Sign in with the teacher email. Students do not need an account, and they cannot change these locks.</p>';
+    if(st.reason==='unavailable'||S.accessCfg.reason==='unavailable') body+='<p class="small muted" style="margin:8px 0 0">Teacher sign-in needs the settings file, which did not load. Locked levels stay locked.</p>';
+    else body+='<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">Teacher email</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div><button class="btn primary" type="submit">Sign in</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p></form>';
+  }else{
+    body+='<p style="margin:8px 0">Signed in as '+esc(S.teacherEmail)+'. These switches are one setting for every student.</p>'+levelLockButtons()+'<div style="margin-top:8px"><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
+  }
+  if(st.locks){
+    body+='<p class="small muted" style="margin:8px 0 0">'+KenjLevelAccess.LEVEL_IDS.map(k=>LEVELS[k].name+': '+(st.locks[k]?'locked':'open')).join(' · ')+(st.updatedAt?' · updated '+fmtDate(st.updatedAt):'')+'</p>';
+  }
+  return '<div class="panel" id="level-access-panel"><div class="eyebrow">Level access</div><h3 style="font-size:20px">Levels for every student</h3>'+body+'</div>';
+}
+let testChannel=null;
+let accessUnsub=null;
+function listenTestChannel(){
+  if(testChannel||!S.testMemory) return;
+  try{
+    testChannel=new BroadcastChannel('kenj-level-access-test');
+    testChannel.onmessage=ev=>{if(!ev||!ev.data)return;S.accessCtl.applySnapshot(ev.data,Date.now());onAccessChanged();};
+  }catch(e){}
+}
+function publishTest(data){try{listenTestChannel();testChannel&&testChannel.postMessage(data);}catch(e){}}
+async function saveLevelLocks(next){
+  if(!S.levelTeacher){toast('Only a signed-in teacher can change level locks.');return;}
+  let payload;
+  try{payload=KenjLevelAccess.buildLockDocument(next,S.teacherEmail,S.accessCfg.teacherEmails,Date.now());}
+  catch(e){toast(e&&e.code==='not-teacher'?'Only a listed teacher can change level locks.':'Could not prepare that change.');return;}
+  if(S.testMemory){S.accessCtl.applySnapshot(payload,Date.now());publishTest(payload);onAccessChanged();toast('Level locks saved on this test page.');return;}
+  if(!S.fb||!accessSnap().canSave){toast('Wait until the class settings have loaded before saving.');return;}
+  S.lockSaving=true;render();
+  try{await S.fb.setDoc(S.fb.doc(S.fb.db,'settings','levelAccess'),payload);toast('Level locks saved for every student.');}
+  catch(e){
+    const code=e&&(e.code||'');
+    toast(code.indexOf('permission-denied')!==-1?'The server refused the change. Check that this email is in the security rules.':'Could not save the level locks. Existing locks stay as they are.');
+  }finally{S.lockSaving=false;render();}
+}
+function applyTeacherUser(user){
+  const email=user&&user.email;
+  const listed=KenjLevelAccess.isTeacherEmail(email,S.accessCfg.teacherEmails);
+  const verified=KenjLevelAccess.teacherWriteAllowed(email,!!(user&&user.emailVerified),S.accessCfg.teacherEmails);
+  S.teacherUnverified=!!(listed&&!verified);
+  S.levelTeacher=verified;
+  S.teacherEmail=(S.levelTeacher||S.teacherUnverified)?String(email).trim().toLowerCase():'';
+}
+function teacherAuthMessage(code){
+  if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found'||code==='auth/invalid-email') return 'That email or password was not recognised.';
+  if(code==='auth/too-many-requests') return 'Too many sign-in attempts. Wait a moment and try again.';
+  if(code==='auth/network-request-failed') return 'Could not reach the sign-in service.';
+  return 'Could not sign in.';
+}
+async function signInTeacher(email,password){
+  const box=$('#level-teacher-error');
+  const show=msg=>{if(box){box.hidden=false;box.textContent=msg;}};
+  if(S.testMemory){
+    if(!KenjLevelAccess.isTeacherEmail(email,S.accessCfg.teacherEmails)){show('This account is not a teacher for this class.');return;}
+    S.levelTeacher=true;S.teacherEmail=String(email).trim().toLowerCase();render();return;
+  }
+  if(!S.fb){show('Level locks are not connected to a sign-in service yet.');return;}
+  try{
+    await S.fb.signIn(S.fb.auth,email,password);
+    const user=S.fb.auth.currentUser;
+    if(!KenjLevelAccess.isTeacherEmail(user&&user.email,S.accessCfg.teacherEmails)){
+      await S.fb.signOut(S.fb.auth);
+      applyTeacherUser(null);
+      show('This account is not a teacher for this class.');
+      return;
+    }
+    applyTeacherUser(user);
+    if(S.teacherUnverified){
+      show('This address is not confirmed yet. Use the confirmation steps below. Level locks stay unchanged.');
+      render();
+    }
+  }catch(e){show(teacherAuthMessage(e&&e.code));}
+}
+async function startLevelAccess(){
+  let config=null,loaded=false;
+  try{await loadScript('level-access.config.js');config=window.KENJ_LEVEL_ACCESS||null;loaded=true;}catch(e){loaded=false;}
+  const wasConfigured=lsGet(KenjLevelAccess.FLAG_KEY)==='1';
+  const decision=KenjLevelAccess.resolveBoot({configLoaded:loaded,config:config,wasConfigured:wasConfigured});
+  S.accessCfg=decision.status;
+  if(!decision.configured){
+    clearAccessStored();
+    S.accessCtl.noteUnconfigured();
+    render();
+    return;
+  }
+  S.accessCtl.noteConfigured();
+  if(decision.status.reason==='ready') lsSet(KenjLevelAccess.FLAG_KEY,'1');
+  if(decision.status.reason==='unavailable'&&!accessSnap().locks) S.accessCtl.applyError({code:'unavailable'},Date.now());
+  render();
+  if(decision.status.reason!=='ready') return;
+  try{
+    const appMod=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
+    const authMod=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+    const fsMod=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    const app=appMod.initializeApp(config.firebase);
+    const auth=authMod.getAuth(app);
+    const db=fsMod.getFirestore(app);
+    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,setDoc:fsMod.setDoc,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification};
+    const ref=fsMod.doc(db,'settings','levelAccess');
+    if(accessUnsub){accessUnsub();accessUnsub=null;}
+    accessUnsub=fsMod.onSnapshot(ref,snap=>{
+      const fromCache=!!(snap.metadata&&snap.metadata.fromCache);
+      if(!snap.exists()){if(!fromCache)S.accessCtl.applyMissing(Date.now());}
+      else S.accessCtl.applySnapshot(snap.data(),Date.now(),{fromCache:fromCache});
+      onAccessChanged();
+    },err=>{S.accessCtl.applyError(err,Date.now());onAccessChanged();});
+    authMod.onAuthStateChanged(auth,user=>{
+      if(user&&!KenjLevelAccess.isTeacherEmail(user.email,S.accessCfg.teacherEmails)){
+        S.fb.signOut(auth).catch(()=>{});
+        applyTeacherUser(null);
+      }else applyTeacherUser(user);
+      if(S.view==='teacher'&&!S.game) render();
+    });
+    setTimeout(()=>{if(accessSnap().mode==='checking'){S.accessCtl.applyError({code:'timeout'},Date.now());onAccessChanged();}},12000);
+  }catch(e){S.accessCtl.applyError(e,Date.now());onAccessChanged();}
 }
 function touchDay(){
   const t=ymd();
@@ -943,21 +1154,28 @@ function renderChips(){
     '<span class="chip hide-sm" title="Words mastered">'+I.brain+masteredCount()+'</span>';
 }
 function renderTabs(){
-  const tabs=[['learn','Lessons'],['practice','Practice'],['homework','Homework'],['progress','My progress']];
-  if(S.teacher) tabs.push(['teacher','Teacher']);
+  const tabs=[['learn','Lessons'],['practice','Practice'],['homework','Homework'],['progress','My progress'],['teacher','Teacher']];
   $('#tabs').innerHTML=tabs.map(([k,l])=>'<a href="#'+k+'"'+(S.view===k?' aria-current="page"':'')+'>'+l+'</a>').join('');
 }
-function route(){
-  const h=(location.hash||'').slice(1);const ok=['learn','practice','homework','progress'].concat(S.teacher?['teacher']:[]);
-  S.view=ok.includes(h)?h:'learn';S.game=null;render();
+function applyHash(){
+  const parsed=KenjLevelAccess.parseHash(location.hash||'');
+  S.view=parsed.view||'learn';
+  S.game=null;clearInterval(matchTimer);
+  const setLevel=level=>{if(level&&S.prog.level!==level){S.prog.level=level;save();}};
+  if(S.view==='learn'&&parsed.lessonId&&BYID[parsed.lessonId]){S.lesson=parsed.lessonId;setLevel(parsed.level);}
+  else if((S.view==='learn'||S.view==='practice')&&parsed.level){S.lesson=null;setLevel(parsed.level);}
+  else if(S.view==='learn') S.lesson=null;
+  else S.lesson=null;
 }
+function route(){applyHash();render();}
 window.addEventListener('hashchange',route);
 
 function render(){
   renderTabs();renderChips();
   const m=$('#main');
-  if(S.game){m.innerHTML=renderGame();afterGameRender();return;}
-  let html='';
+  if(S.game&&!gameAllowed(S.game)){S.game=null;clearInterval(matchTimer);}
+  if(S.game){m.innerHTML=accessBanner()+renderGame();afterGameRender();return;}
+  let html=accessBanner();
   if(S.ready&&S.db&&S.canWrite===false) html+='<div class="banner">Your progress is saved only on this device. Ask Mr. Kenj to share the app with you as a <b>Contributor</b> so your points, homework and progress are saved for him to see.</div>';
   if(S.ready&&!S.db) html+='<div class="banner">You are using the guest version: games work, and progress is saved on this device only. Open the app from Mr. Kenj\'s link while signed in to hand in homework.</div>';
   html+=({learn:viewLearn,practice:viewPractice,homework:viewHomework,progress:viewProgress,teacher:viewTeacher}[S.view])();
@@ -969,8 +1187,11 @@ function render(){
 function wordOfDay(){const pool=levelWords(S.prog.level);const d=new Date();const n=d.getFullYear()*400+d.getMonth()*31+d.getDate();return pool[n%pool.length];}
 function firstName(){return (S.name||'').split(/\s+/)[0];}
 function viewLearn(){
-  if(S.lesson) return viewLesson(BYID[S.lesson]);
-  const p=S.prog,lv=p.level,w=wordOfDay(),tricky=trickyWords().length;
+  if(S.lesson&&BYID[S.lesson]) return viewLesson(BYID[S.lesson]);
+  S.lesson=null;
+  const p=S.prog,lv=p.level in LEVELS?p.level:'A',gate=accessFor(lv);
+  if(!gate.open) return '<section class="grid" style="gap:14px"><div class="row" style="justify-content:space-between"><h2 style="font-size:24px">Lessons</h2>'+levelSwitch()+'</div>'+lockedMessage(lv,gate,null)+'</section>';
+  const w=wordOfDay(),tricky=openTricky().length;
   const next=LESSONS.find(l=>l.level===lv&&!((p.scores[l.id]||0)>=80))||LESSONS.find(l=>l.level===lv);
   let h='<section class="hello">'+
     '<div class="panel"><div class="eyebrow">'+(S.teacher?'Teacher view':'Welcome back')+'</div><h2>'+(firstName()?'Hi, '+esc(firstName())+'!':'Hi there!')+' Ready to learn?</h2>'+
@@ -983,7 +1204,7 @@ function viewLearn(){
   h+='<div class="grid g3">'+LESSONS.filter(l=>l.level===lv).map(lessonCard).join('')+'</div></section>';
   return h;
 }
-function levelSwitch(){return '<div class="lvl-switch" role="group" aria-label="Level">'+Object.keys(LEVELS).map(k=>'<button class="lv-'+k+'" aria-pressed="'+(S.prog.level===k)+'" data-act="level" data-l="'+k+'">'+LEVELS[k].name+'<small>'+LEVELS[k].tag+'</small></button>').join('')+'</div>';}
+function levelSwitch(){return '<div class="lvl-switch" role="group" aria-label="Level">'+Object.keys(LEVELS).map(k=>{const gate=accessFor(k);const locked=gate.reason==='locked';const checking=gate.reason==='checking';const label=locked?'Locked':checking?'Checking':LEVELS[k].tag;return '<button type="button" class="lv-'+k+(locked?' is-locked':'')+'" aria-pressed="'+(S.prog.level===k)+'" aria-disabled="'+(locked||checking)+'" data-act="level" data-l="'+k+'">'+LEVELS[k].name+'<small>'+label+'</small></button>';}).join('')+'</div>';}
 function lessonCard(l){
   const m=lessonMastered(l),sc=S.prog.scores[l.id];
   const st=sc==null?'<span class="pill">Not started</span>':sc>=80?'<span class="pill good">Passed · '+sc+'%</span>':'<span class="pill warn">Best '+sc+'%</span>';
@@ -995,6 +1216,8 @@ function activityButtons(scope){
   return '<div class="acts">'+a.map(([k,t,d,ic])=>'<button class="act" data-act="play" data-g="'+k+'" data-scope="'+scope+'">'+ic+'<b>'+t+'</b><span>'+d+'</span></button>').join('')+'</div>';
 }
 function viewLesson(l){
+  const gate=accessFor(l.level);
+  if(!gate.open) return '<section class="grid" style="gap:14px"><div class="row" style="justify-content:space-between"><h2 style="font-size:24px">Lessons</h2>'+levelSwitch()+'</div>'+lockedMessage(l.level,gate,l)+'</section>';
   const hw=S.assignments.filter(a=>a.lesson===l.id);
   return '<section class="grid" style="gap:18px"><div><button class="btn ghost sm" data-act="close-lesson">'+I.back.replace('<svg','<svg width="16" height="16"')+' All lessons</button></div>'+
   '<div class="panel lv-'+l.level+'" style="border-top:5px solid var(--lv)"><div class="eyebrow">'+LEVELS[l.level].name+' · Lesson '+l.n+'</div><h2 class="cap" style="font-size:30px;margin-top:4px">'+esc(l.title)+'</h2><p class="muted" style="margin:6px 0 0">Grammar focus: '+esc(l.grammar)+'</p>'+
@@ -1007,8 +1230,10 @@ function viewLesson(l){
 
 /* ---------- PRACTICE ---------- */
 function viewPractice(){
-  const lv=S.prog.level,tricky=trickyWords().length;
-  return '<section class="grid" style="gap:18px"><div class="row" style="justify-content:space-between"><div><h2 style="font-size:26px">Practice zone</h2><p class="muted" style="margin:4px 0 0">Mixed words from every lesson in your level.</p></div>'+levelSwitch()+'</div>'+
+  const lv=S.prog.level in LEVELS?S.prog.level:'A',gate=accessFor(lv),tricky=openTricky().length;
+  const head='<section class="grid" style="gap:18px"><div class="row" style="justify-content:space-between"><div><h2 style="font-size:26px">Practice zone</h2><p class="muted" style="margin:4px 0 0">Mixed words from every lesson in your level.</p></div>'+levelSwitch()+'</div>';
+  if(!gate.open) return head+lockedMessage(lv,gate,null)+'</section>';
+  return head+
   activityButtons('level')+
   '<div class="grid g2">'+
   '<div class="panel"><div class="eyebrow">Smart review</div><h3 style="font-size:20px;margin:4px 0 8px">Tricky words</h3><p class="muted small" style="margin:0 0 12px">Words you got wrong or are still learning come back here until you master them.</p>'+
@@ -1027,16 +1252,19 @@ function kenjBox(w){
 
 /* ---------- GAMES ---------- */
 function scopeWords(scope){
-  if(scope==='review') return shuffle(trickyWords()).slice(0,12);
+  if(scope==='review') return shuffle(openTricky()).slice(0,12);
   if(scope==='level') return shuffle(levelWords(S.prog.level)).slice(0,12);
   return shuffle(BYID[scope].words);
 }
 function scopeLabel(scope){return scope==='review'?'Tricky words':scope==='level'?LEVELS[S.prog.level].name+' mix':'Lesson '+BYID[scope].n+' · '+BYID[scope].title;}
 function startGame(type,scope){
+  const gate=KenjLevelAccess.canStartScope(scope,S.prog.level,lv=>accessFor(lv));
+  if(!gate.open){toast(gate.reason==='checking'?'Wait while level access is checked.':'That level is locked. Your progress is kept.');return;}
+  if(scope==='review'&&!openTricky().length){toast(trickyWords().length?'Those words are in a locked level. Your progress is kept.':'No words to practise yet.');return;}
   let words=scopeWords(scope);
   if(!words.length){toast('No words to practise yet.');return;}
   const lvl=scope==='review'||scope==='level'?S.prog.level:BYID[scope].level;
-  const pool=scope==='review'?ALLWORDS:levelWords(lvl);
+  const pool=scope==='review'?ALLWORDS.filter(w=>accessFor(w.lesson[0]).open):levelWords(lvl);
   if(type==='spell') words=words.filter(w=>/^[a-z' -]+$/i.test(w.w)&&w.w.length<=22);
   if(type==='gap') words=words.filter(w=>norm(w.e).includes(norm(w.w)));
   if(type==='match') words=words.slice(0,6);
@@ -1100,7 +1328,9 @@ function afterGameRender(){
 function next(){const g=S.game;g.i++;g.answered=false;g.flipped=false;if(g.i>=g.words.length)finish();else render();}
 function grade(w,ok){if(ok){setBox(w.key,box(w.key)+1);S.game.score++;S.game.xp+=10;}else setBox(w.key,0);}
 function finish(){
-  const g=S.game;g.done=true;const tot=g.words.length;g.pct=Math.round(g.score/tot*100);
+  const g=S.game;if(!g)return;
+  if(!gameAllowed(g)){S.game=null;clearInterval(matchTimer);toast('That level is locked. This result was not saved as a new score.');render();return;}
+  g.done=true;const tot=g.words.length;g.pct=Math.round(g.score/tot*100);
   g.xp+=20;if(g.pct===100){g.xp+=20;S.prog.perfect=(S.prog.perfect||0)+1;}
   S.prog.games=(S.prog.games||0)+1;
   if(g.scope!=='level'&&g.scope!=='review'&&g.type!=='flash'&&g.type!=='say') S.prog.scores[g.scope]=Math.max(S.prog.scores[g.scope]||0,g.pct);
@@ -1127,7 +1357,7 @@ function viewHomework(){
     const L=a.lesson&&BYID[a.lesson];
     return '<div class="panel" style="display:grid;gap:10px"><div class="row" style="justify-content:space-between"><span class="eyebrow">'+(a.due?'Due '+fmtDate(a.due):'No due date')+(L?' · '+LEVELS[L.level].name+' L'+L.n:'')+'</span>'+status+'</div><h3 style="font-size:20px">'+esc(a.title)+'</h3>'+
       (a.details?'<p style="margin:0;white-space:pre-wrap">'+esc(a.details)+'</p>':'')+
-      (L?'<div><button class="btn sm" data-act="open-lesson" data-id="'+L.id+'" data-go="learn">Open lesson '+L.n+'</button></div>':'')+
+      (L?'<div><button class="btn sm" data-act="open-lesson" data-id="'+L.id+'" data-go="learn">'+(accessFor(L.level).reason==='locked'?LEVELS[L.level].name+' is locked':'Open lesson '+L.n)+'</button></div>':'')+
       (last&&last.feedback?'<div class="banner"><b>Mr. Kenj:</b> '+esc(last.feedback)+'</div>':'')+
       handInForm(a.id)+'</div>';}).join('')+'</div>'
     :'<div class="panel muted">No homework yet. When Mr. Kenj sets homework it appears here. You can still send extra work below.</div>';
@@ -1182,7 +1412,8 @@ function viewProgress(){
     if(i%2===1||i===13)svg+='<text x="'+(x+bw*.32)+'" y="'+(H-6)+'" text-anchor="middle">'+(i===13?'Today':new Date(d+'T12:00').getDate())+'</text>';});
   svg+='</svg>';
   const lv=Object.keys(LEVELS).map(k=>{const tot=levelWords(k).length,m=masteredCount(p,k),ps=lessonsPassed(p,k);
-    return '<div class="lv-'+k+'" style="display:grid;gap:6px"><div class="row" style="justify-content:space-between"><b>'+LEVELS[k].name+' <span class="muted small">'+LEVELS[k].tag+'</span></b><span class="small muted">'+m+'/'+tot+' words · '+ps+'/30 lessons</span></div><div class="meter" style="height:10px"><i style="width:'+(m/tot*100)+'%"></i></div></div>';}).join('');
+    const note=accessFor(k).reason==='locked'?' · Locked':'';
+    return '<div class="lv-'+k+'" style="display:grid;gap:6px"><div class="row" style="justify-content:space-between"><b>'+LEVELS[k].name+' <span class="muted small">'+LEVELS[k].tag+'</span></b><span class="small muted">'+m+'/'+tot+' words · '+ps+'/30 lessons'+note+'</span></div><div class="meter" style="height:10px"><i style="width:'+(m/tot*100)+'%"></i></div></div>';}).join('');
   const bd=badges();
   return '<section class="grid" style="gap:18px"><h2 style="font-size:26px">My progress</h2>'+
     '<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin:0"><div class="stat"><b>'+p.xp.toLocaleString()+'</b><span>total XP</span></div><div class="stat"><b>'+liveStreak(p)+'</b><span>day streak (best '+(p.best||0)+')</span></div><div class="stat"><b>'+masteredCount()+'</b><span>words mastered</span></div><div class="stat"><b>'+(p.games||0)+'</b><span>games played</span></div><div class="stat"><b>'+(p.hw||0)+'</b><span>homework handed in</span></div></div>'+
@@ -1201,6 +1432,7 @@ function leaderboard(){
 
 /* ---------- TEACHER ---------- */
 function viewTeacher(){
+  if(!(S.db&&S.teacher)) return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Teacher</h2><p class="muted" style="margin:4px 0 0">Level locks for every student live here. Homework hand-in and the class list still need the hosted class tools.</p></div>'+viewLevelAccessPanel()+'</section>';
   const students=S.classProg;
   const opts=LESSONS.map(l=>'<option value="'+l.id+'">'+LEVELS[l.level].name+' · L'+l.n+' '+esc(l.title)+'</option>').join('');
   const rows=students.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(r=>{const n=(S.profiles[r.id]&&S.profiles[r.id].name)||'Student';const subs=(S.subs[r.id]||[]);
@@ -1208,7 +1440,7 @@ function viewTeacher(){
   const all=[];Object.entries(S.subs).forEach(([sid,list])=>list.forEach(s=>all.push(Object.assign({sid},s))));
   all.sort((a,b)=>(b.at||0)-(a.at||0));
   const shown=S.subFilter==='todo'?all.filter(s=>!s.grade):all;
-  return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Teacher dashboard</h2><p class="muted" style="margin:4px 0 0">Share this app with your students as <b>Contributors</b> so they can save progress and upload homework.</p></div>'+
+  return '<section class="grid" style="gap:18px"><div><h2 style="font-size:26px">Teacher dashboard</h2><p class="muted" style="margin:4px 0 0">Share this app with your students as <b>Contributors</b> so they can save progress and upload homework.</p></div>'+viewLevelAccessPanel()+
   '<div class="panel"><div class="eyebrow">'+students.length+' learner'+(students.length===1?'':'s')+'</div><h3 style="font-size:20px;margin:4px 0 10px">Class progress</h3>'+
   (rows?'<div class="tbl"><table><thead><tr><th>Student</th><th>Level</th><th>XP</th><th>Streak</th><th>Words</th><th>Lessons passed</th><th>Homework</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="muted" style="margin:0">Students appear here after they open the app and play their first game.</p>')+'</div>'+
   '<div class="grid g2"><form class="panel grid" id="assign-form" style="gap:10px;align-content:start"><h3 style="font-size:20px">Set homework</h3>'+
@@ -1243,9 +1475,46 @@ document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act;
   if(a==='say'){e.stopPropagation();speak(t.dataset.t,parseFloat(t.dataset.r)||0.95);return;}
-  if(a==='level'){S.prog.level=t.dataset.l;save();render();return;}
-  if(a==='open-lesson'){S.lesson=t.dataset.id;S.prog.level=BYID[S.lesson].level;if(t.dataset.go&&S.view!=='learn'){location.hash='learn';S.view='learn';}render();window.scrollTo(0,0);return;}
-  if(a==='close-lesson'){S.lesson=null;render();return;}
+  if(a==='level'){
+    const l=t.dataset.l;
+    if(KenjLevelAccess.LEVEL_IDS.indexOf(l)===-1) return;
+    const hash=S.view==='practice'?'#practice/'+l:'#level/'+l;
+    if(location.hash===hash){S.prog.level=l;if(S.view==='learn')S.lesson=null;save();const gate=accessFor(l);if(gate.reason==='locked')toast(LEVELS[l].name+' is locked for every student. Your progress is kept.');render();}
+    else location.hash=hash;
+    return;}
+  if(a==='open-lesson'){
+    const id=t.dataset.id;if(!BYID[id]) return;
+    const hash='#learn/'+id;
+    if(location.hash===hash){applyHash();render();}else location.hash=hash;
+    window.scrollTo(0,0);return;}
+  if(a==='close-lesson'){
+    if((location.hash||'').indexOf('/')!==-1) location.hash='learn';
+    else {S.lesson=null;render();}
+    return;}
+  if(a==='toggle-lock'){
+    if(!S.levelTeacher){toast('Only a signed-in teacher can change level locks.');return;}
+    const st=accessSnap();
+    if(!st.canSave){toast('Wait until the class settings have loaded before saving.');return;}
+    const base=st.locks||KenjLevelAccess.emptyLocks();
+    saveLevelLocks(KenjLevelAccess.toggleLock(base,t.dataset.l,!base[t.dataset.l]));
+    return;}
+  if(a==='level-sign-out'){S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='send-verify'){
+    const user=S.fb&&S.fb.auth&&S.fb.auth.currentUser;
+    if(!user||!S.fb.sendVerification){toast('Sign in again before sending the confirmation email.');return;}
+    try{await S.fb.sendVerification(user);toast('Confirmation email sent. Open it, then choose I have confirmed it.');}
+    catch(e){toast(e&&e.code==='auth/too-many-requests'?'Wait a moment before sending another confirmation email.':'Could not send the confirmation email. Try again.');}
+    return;}
+  if(a==='recheck-verify'){
+    const user=S.fb&&S.fb.auth&&S.fb.auth.currentUser;
+    if(!user){toast('Sign in again, then confirm the address.');return;}
+    try{
+      await user.reload();
+      applyTeacherUser(S.fb.auth.currentUser);
+      toast(S.levelTeacher?'Address confirmed. You can change the level locks.':'This address is still not confirmed.');
+      render();
+    }catch(e){toast('Could not check the confirmation yet.');}
+    return;}
   if(a==='review'){startGame('flash','review');return;}
   if(a==='play'){startGame(t.dataset.g,t.dataset.scope);return;}
   if(a==='exit'){S.game=null;clearInterval(matchTimer);render();return;}
@@ -1280,6 +1549,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t
 document.addEventListener('change',e=>{if(e.target.id==='accent'){S.accent=e.target.value;lsSet('kenj-accent',S.accent);}});
 document.addEventListener('submit',async e=>{
   const f=e.target;
+  if(f.id==='level-teacher-form'){e.preventDefault();const email=$('#teacher-email').value,password=$('#teacher-password').value;const pw=$('#teacher-password');if(pw)pw.value='';signInTeacher(email,password);return;}
   if(f.id==='spell-form'){e.preventDefault();const g=S.game;if(!g||g.answered)return;const w=g.words[g.i];const v=$('#spell-in').value;if(!v.trim())return;
     g.answered=true;const ok=norm(v)===norm(w.w);grade(w,ok);const fb=$('#fb');fb.className='feedback '+(ok?'good':'bad');fb.textContent=ok?'Correct! +10':'It is spelled: '+w.w;setTimeout(next,ok?1000:2200);return;}
   if(f.classList.contains('hw-form')){e.preventDefault();await handIn(f);return;}
@@ -1308,9 +1578,26 @@ async function askKenj(btn){
 }
 
 /* ---------- boot ---------- */
+function installTestHook(){
+  const host=location.hostname;
+  if(host!=='localhost'&&host!=='127.0.0.1') return;
+  window.__KENJ_TEST__={
+    applyRemote(data){const r=S.accessCtl.applySnapshot(data,Date.now());onAccessChanged();return r;},
+    applyMissing(){const r=S.accessCtl.applyMissing(Date.now());onAccessChanged();return r;},
+    applyError(err){S.accessCtl.applyError(err||{code:'test'},Date.now());onAccessChanged();},
+    configure(){if(accessUnsub){accessUnsub();accessUnsub=null;}S.accessCfg={configured:true,reason:'ready',teacherEmails:['teacher@example.com']};S.accessCtl.noteConfigured();S.testMemory=true;lsSet(KenjLevelAccess.FLAG_KEY,'1');listenTestChannel();render();},
+    signIn(){if(!S.testMemory)return;S.levelTeacher=true;S.teacherEmail='teacher@example.com';render();},
+    seedProgress(partial){partial=partial||{};if(partial.scores)Object.assign(S.prog.scores,partial.scores);if(partial.cards)Object.assign(S.prog.cards,partial.cards);if(partial.xp!=null)S.prog.xp=partial.xp;save();render();},
+    showHomework(lessonId){S.assignments=[{id:'hw1',title:'Workbook page',lesson:lessonId,due:'',details:''}];S.db=S.db||{collection:function(){return {onSnapshot:function(){return function(){};}};},doc:function(){return {};}};location.hash='homework';},
+    state(){return accessSnap();},
+    progress(){return JSON.parse(JSON.stringify(S.prog));}
+  };
+}
 function boot(){
-  const h=(location.hash||'').slice(1);if(['learn','practice','homework','progress'].includes(h))S.view=h;
+  installTestHook();
+  applyHash();
   render();
+  startLevelAccess();
   if(!window.claude||!window.claude.use){S.ready=true;render();return;}
   (async()=>{
     const [db,user,assets,sample]=await Promise.all(['db','user','assets','sample'].map(n=>window.claude.use(n).catch(()=>null)));
