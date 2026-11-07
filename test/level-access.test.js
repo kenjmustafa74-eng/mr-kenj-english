@@ -40,6 +40,14 @@ test('levels lock independently and a pass mark is not part of the document', ()
   assert.equal(ctl.snapshot().locks.A, false);
 });
 
+test('an unverified allowlisted address cannot write', () => {
+  const list = ['tchmk9@gmail.com'];
+  assert.equal(access.teacherWriteAllowed('tchmk9@gmail.com', false, list), false);
+  assert.equal(access.teacherWriteAllowed('Tchmk9@gmail.com', true, list), true);
+  assert.equal(access.teacherWriteAllowed('other@school.test', true, list), false);
+  assert.equal(access.teacherWriteAllowed('tchmk9@gmail.com', undefined, list), false);
+});
+
 test('a student email cannot build a write', () => {
   assert.throws(
     () => access.buildLockDocument({ A: false, B: false, C: false }, 'student@school.test', ['teacher@school.test'], 1),

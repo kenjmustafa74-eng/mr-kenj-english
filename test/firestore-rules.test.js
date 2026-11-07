@@ -22,7 +22,8 @@ test('rules publish one readable document and let only the listed teacher write 
   assert.match(rules, /allow create, update: if isTeacher\(\) && validLevelAccess\(\);/);
   assert.match(rules, /allow delete: if false;/);
   assert.match(rules, /request\.auth != null/);
-  assert.match(rules, /request\.auth\.token\.email\.lower\(\)/);
+  assert.match(rules, /request\.auth\.token\.email_verified == true/);
+  assert.match(rules, /request\.resource\.data\.updatedBy == request\.auth\.token\.email\.lower\(\)/);
   assert.match(rules, /locks\.A is bool/);
   assert.match(rules, /locks\.B is bool/);
   assert.match(rules, /locks\.C is bool/);

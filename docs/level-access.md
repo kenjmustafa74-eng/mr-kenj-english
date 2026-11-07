@@ -63,16 +63,16 @@ An older snapshot cannot replace a newer one. A cached snapshot from the databas
 
 ## What students cannot do
 
-Students do not need an account to study or to read the locks. The security rules allow anyone to read `settings/levelAccess` and allow create or update only for the listed teacher email, and only when the document has boolean locks for A, B and C. Delete is refused. Every other path in a project that uses this rules file is refused.
+Students do not need an account to study or to read the locks. The security rules allow anyone to read `settings/levelAccess`. A create or update is allowed only when the signed-in email is `tchmk9@gmail.com`, Firebase has marked that email verified, the locks are booleans for A, B and C, and `updatedBy` is exactly that verified address. An unverified password account, even with the same address, cannot write. Delete is refused. Every other path is refused.
 
-The page also refuses to build a write unless the signed-in email is on the teacher list. The rules are the real control. A student signed in with another email cannot change the class setting.
+The page keeps the email and password sign-in. If that teacher is signed in but the address is not confirmed, the Teacher tab explains that and offers to send the confirmation message again. It does not show the lock switches until the address is confirmed.
 
 ## Owner setup still required
 
 The web settings are already in `level-access.config.js`. Do not paste another app’s config over them. Nothing in this repository deploys rules, creates users, or turns on billing.
 
-1. In Authentication for this project, turn on Email/Password and create the user `tchmk9@gmail.com`. That address is already the only teacher in the settings and in `firestore.rules`. No password is stored in this repository, and the user was not created from here.
-2. Create a Cloud Firestore database. A read-only check found the Cloud Firestore API is not enabled on this project yet.
+1. In Authentication for this project, turn on Email/Password and create the user `tchmk9@gmail.com`. Open the confirmation message Firebase sends and confirm the address before changing locks. The app can send that message again from the Teacher tab. No password is stored in this repository, and the user was not created from here. The rules now require `email_verified`. They are in this repository and have not been deployed from here.
+2. Cloud Firestore for this project is already answering requests. Publish the verified-email rules in `firestore.rules` over the closed production rules. This repository does not deploy them.
 3. The rules already allow a write only when the signed-in email is `tchmk9@gmail.com`. They deny every other account, deletes, and every other path. From this directory, after you log in to the Firebase CLI yourself, deploy only those rules to project `general-english-c7371`:
 
    ```bash

@@ -231,6 +231,10 @@
     });
   }
 
+  function teacherWriteAllowed(email, emailVerified, allowList) {
+    return emailVerified === true && isTeacherEmail(email, allowList);
+  }
+
   function looksPlaceholder(value) {
     var v = String(value || '').trim();
     if (!v) return true;
@@ -332,6 +336,7 @@
     filterWordsByAccess: filterWordsByAccess,
     canStartScope: canStartScope,
     isTeacherEmail: isTeacherEmail,
+    teacherWriteAllowed: teacherWriteAllowed,
     configStatus: configStatus,
     resolveBoot: resolveBoot,
     toggleLock: toggleLock,
