@@ -1,0 +1,65 @@
+# Publish the static study app with GitHub's Pages actions.
+# https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+# configure-pages does not turn Pages on. A repository admin must select
+# GitHub Actions as the source, or call the documented Pages API.
+name: Publish GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Stage the study app
+        run: |
+          set -eu
+          mkdir -p _site
+          cp \
+            index.html \
+            level-access.js \
+            level-access.config.js \
+            manifest.json \
+            sw.js \
+            icon.svg \
+            icon-192.png \
+            icon-512.png \
+            _site/
+          test -s _site/index.html
+          test -s _site/level-access.config.js
+          test ! -e _site/node_modules
+          test ! -e _site/package.json
+          test ! -e _site/package-lock.json
+          test ! -e _site/test
+          test ! -e _site/docs
+          test ! -e _site/firestore.rules
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
