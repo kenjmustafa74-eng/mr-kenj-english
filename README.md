@@ -6,9 +6,9 @@ A General English study app for students: flashcards, word games, pronunciation 
 Open the GitHub Pages link for this repository in any browser. On a phone, choose **Add to Home Screen** (Safari) or **Install app** (Chrome) to use it like a regular app — it also works offline after the first visit.
 
 ## Publishing (GitHub Pages)
-1. Push these files to the `main` branch.
-2. In the repository go to **Settings → Pages**, set *Source* to **Deploy from a branch**, branch **main**, folder **/ (root)**, and save.
-3. After a minute the app is live at `https://<your-username>.github.io/<repo-name>/`.
+Pushes to `main` run `.github/workflows/pages.yml`. That workflow copies only the study app (the page, its scripts, the web-app manifest, the service worker and the icons) and publishes that folder with GitHub’s Pages actions. It does not upload tests, dependencies or the lock file.
+
+GitHub still requires a repository admin to turn Pages on once: **Settings → Pages → Build and deployment → Source → GitHub Actions**. The workflow cannot grant that setting by itself. After the first successful run, the public address is shown on that same settings page.
 
 ## Notes
 - Each student's progress is saved in their own browser on their own device.
