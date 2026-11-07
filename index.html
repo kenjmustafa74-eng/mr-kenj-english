@@ -66,6 +66,8 @@ main{padding-block:24px 64px;display:grid;gap:24px}
 .btn.ghost{background:transparent}
 .btn.sm{padding:6px 10px;font-size:14px}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
+.auth-choice{margin:8px 0}
+.auth-choice button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;flex:none}
 .icon-btn svg{width:18px;height:18px}
 .icon-btn:hover{border-color:var(--ink)}
@@ -983,9 +985,11 @@ function viewLevelAccessPanel(){
   if(S.teacherUnverified){
     body+='<div class="banner" id="teacher-unverified"><b>Confirm this address before changing locks.</b> Signed in as '+esc(S.teacherEmail)+'. Firebase has not confirmed this address yet, so this account cannot write the class settings. Open the confirmation message, then choose I have confirmed it. Level locks stay unchanged until then.</div><div class="row" style="margin-top:8px"><button class="btn primary" type="button" data-act="send-verify">Send confirmation email</button><button class="btn" type="button" data-act="recheck-verify">I have confirmed it</button><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
   }else if(!S.levelTeacher){
-    body+='<p style="margin:8px 0 0">Sign in with the teacher email to change these locks. Students cannot change them.</p>';
+    body+=S.authMode==='create'
+      ? '<p style="margin:8px 0 0">Create an account with the teacher email, then confirm that address before changing locks. Any other address stays a student.</p>'
+      : '<p style="margin:8px 0 0">Sign in with the teacher email to change these locks. Students cannot change them. New here? Choose Sign up.</p>';
     if(st.reason==='unavailable'||S.accessCfg.reason==='unavailable') body+='<p class="small muted" style="margin:8px 0 0">Teacher sign-in needs the settings file, which did not load. Locked levels stay locked.</p>';
-    else body+=signInFields('Teacher email');
+    else body+=accountPanel('Teacher email');
   }else{
     body+='<p style="margin:8px 0">Signed in as '+esc(S.teacherEmail)+'. These switches are one setting for every student.</p>'+levelLockButtons()+accessAdminHtml()+'<div style="margin-top:8px"><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
   }
@@ -1097,15 +1101,9 @@ async function setStudentGrant(uid,status){
     toast(status==='approved'?'Student approved.':'Access removed.');
   }catch(e){toast('Could not update access. The class rules were not changed.');}
 }
-function teacherAuthMessage(code){
-  if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found'||code==='auth/invalid-email') return 'That email or password was not recognised.';
-  if(code==='auth/too-many-requests') return 'Too many sign-in attempts. Wait a moment and try again.';
-  if(code==='auth/network-request-failed') return 'Could not reach the sign-in service.';
-  return 'Could not sign in.';
-}
+function teacherAuthMessage(code){return KenjLevelAccess.signInMessage(code);}
 async function signInTeacher(email,password){
-  const box=$('#level-teacher-error');
-  const show=msg=>{if(box){box.hidden=false;box.textContent=msg;}};
+  const show=msg=>{S.accountError=msg;const box=$('#level-teacher-error');if(box){box.hidden=false;box.textContent=msg;}};
   if(S.testMemory){
     if(!KenjLevelAccess.isTeacherEmail(email,S.accessCfg.teacherEmails)){show('This account is not a teacher for this class.');return;}
     S.levelTeacher=true;S.teacherEmail=String(email).trim().toLowerCase();render();return;
@@ -1141,7 +1139,7 @@ async function startLevelAccess(){
     const app=appMod.initializeApp(config.firebase);
     const auth=authMod.getAuth(app);
     const db=fsMod.getFirestore(app);
-    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification,resetPassword:authMod.sendPasswordResetEmail};
+    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,signIn:authMod.signInWithEmailAndPassword,createAccount:authMod.createUserWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification,resetPassword:authMod.sendPasswordResetEmail};
     const ref=fsMod.doc(db,'settings','levelAccess');
     if(accessUnsub){accessUnsub();accessUnsub=null;}
     accessUnsub=fsMod.onSnapshot(ref,snap=>{
@@ -1245,18 +1243,37 @@ function rememberAccess(uid,decision){if(uid) lsSet('kenj-access:'+uid,JSON.stri
 function rememberedAccess(uid){try{const v=JSON.parse(lsGet('kenj-access:'+uid)||'null');return v&&v.decision;}catch(e){return null;}}
 function accessGate(){
   if(S.gate==='checking') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Checking sign-in</h2><p class="muted">Lessons stay closed until we know who is signed in.</p></section>';
-  if(S.gate==='unverified') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Confirm your email</h2><p>Signed in as '+esc(S.teacherEmail)+'. This address is not confirmed yet, so the lessons stay closed. Open the confirmation message, then choose I have confirmed it.</p><div class="row"><button class="btn primary" type="button" data-act="send-verify">Send confirmation email</button><button class="btn" type="button" data-act="recheck-verify">I have confirmed it</button><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
+  if(S.gate==='unverified') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Confirm your email</h2><p>Signed in as '+esc(S.teacherEmail)+'. This address is not confirmed yet, so the lessons stay closed. '+(S.verifySendFailed?'The confirmation email could not be sent yet. Choose Send confirmation email, then I have confirmed it.':'Open the confirmation message, then choose I have confirmed it.')+' Confirming the address does not approve a student and does not change level locks.</p><div class="row"><button class="btn primary" type="button" data-act="send-verify">Send confirmation email</button><button class="btn" type="button" data-act="recheck-verify">I have confirmed it</button><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
   if(S.gate==='pending') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Waiting for approval</h2><p>Signed in as '+esc(S.teacherEmail)+'. Mr. Kenj has not approved this account yet. You cannot approve yourself. The lessons stay closed.</p><div class="row"><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
   if(S.gate==='revoked'||S.gate==='blocked') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Access is closed</h2><p>'+(S.teacherEmail?'Signed in as '+esc(S.teacherEmail)+'. ':'')+'This account cannot open the lessons. If this is unexpected, ask Mr. Kenj.</p><div class="row"><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
-  if(S.gate==='signed-out'||!S.fb) return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Sign in</h2><p>Only students Mr. Kenj has approved can study here. Sign in with the email and password for this app.</p>'+signInFields()+'</section>';
+  if(S.gate==='signed-out'||!S.fb){
+    const create=S.authMode==='create';
+    const title=create?'Create an account':'Sign in';
+    const lead=create
+      ? 'Choose the email and a password of at least 6 characters. Firebase emails you a confirmation link. Confirming that link does not let a student study, and it does not make someone the teacher. A student can study only after Mr. Kenj approves the confirmed address. Mr. Kenj creates the account with the teacher address already allowed for this class, then confirms it.'
+      : 'Sign in if you already have an account. If you are new, choose Sign up. Only students Mr. Kenj has approved can study here.';
+    return '<section class="panel" id="access-gate"><h2 style="font-size:24px">'+title+'</h2><p>'+lead+'</p>'+accountPanel()+'</section>';
+  }
   return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Sign-in is unavailable</h2><p class="muted">The lessons stay closed because access could not be checked. Try again when you are online.</p></section>';
 }
+function authChoice(){
+  const create=S.authMode==='create';
+  const busy=resetSending||accountSending;
+  return '<div class="row auth-choice" role="group" aria-label="Sign in or sign up"><button type="button" class="btn'+(create?'':' primary')+'" data-act="auth-mode" data-mode="sign-in" aria-pressed="'+(create?'false':'true')+'"'+(busy?' disabled':'')+'>Sign in</button><button type="button" class="btn'+(create?' primary':'')+'" id="sign-up" data-act="auth-mode" data-mode="create" aria-pressed="'+(create?'true':'false')+'"'+(busy?' disabled':'')+'>Sign up</button></div>';
+}
+function accountPanel(emailLabel){return authChoice()+signInFields(emailLabel);}
 function signInFields(emailLabel){
-  const notice=S.resetNotice;
+  const create=S.authMode==='create';
+  const notice=!create&&S.resetNotice;
   const status=notice?'<p id="password-reset-status" class="feedback'+(notice.bad?' bad':'')+'" role="status" aria-live="polite">'+esc(notice.message)+'</p>':'<p id="password-reset-status" class="feedback" role="status" aria-live="polite" hidden></p>';
-  return '<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">'+esc(emailLabel||'Email')+'</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div class="row"><button class="btn primary" type="submit">Sign in</button><button class="btn" type="button" id="forgot-password" data-act="forgot-password" aria-describedby="password-reset-status"'+(resetSending?' disabled':'')+'>'+(resetSending?'Sending…':'Forgot password?')+'</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p>'+status+'</form>';
+  const err=S.accountError?'<p class="feedback bad" id="level-teacher-error" role="alert">'+esc(S.accountError)+'</p>':'<p class="feedback bad" id="level-teacher-error" role="alert" hidden></p>';
+  const submit=create?(accountSending?'Creating…':'Create account'):'Sign in';
+  const forgot=create?'':'<button class="btn" type="button" id="forgot-password" data-act="forgot-password" aria-describedby="password-reset-status"'+(resetSending||accountSending?' disabled':'')+'>'+(resetSending?'Sending…':'Forgot password?')+'</button>';
+  const note=create?'The password is sent only to create the account. It is not stored in this app. Already have an account? Choose Sign in.':'The password is sent to the sign-in service and is not stored in this app. New here? Choose Sign up.';
+  return '<form id="level-teacher-form" novalidate class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">'+esc(emailLabel||'Email')+'</label><input type="email" id="teacher-email" autocomplete="'+(create?'email':'username')+'" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="'+(create?'new-password':'current-password')+'" required></div>'+err+'<div class="row"><button class="btn primary" type="submit" id="auth-submit"'+(accountSending?' disabled':'')+'>'+submit+'</button>'+forgot+'</div><p class="small muted" style="margin:0">'+note+'</p>'+status+'</form>';
 }
 let resetSending=false;
+let accountSending=false;
 async function forgotPassword(){
   if(resetSending) return;
   const input=$('#teacher-email');
@@ -1281,6 +1298,36 @@ async function forgotPassword(){
     resetSending=false;
     const live=$('#forgot-password');
     if(live){live.disabled=false;live.textContent='Forgot password?';}
+  }
+}
+async function createAccount(email,password){
+  if(accountSending) return;
+  const show=msg=>{S.accountError=msg;const box=$('#level-teacher-error');if(box){box.hidden=false;box.textContent=msg;}};
+  const clean=KenjLevelAccess.emailForReset(email);
+  if(!clean){show('Enter a valid email address.');const input=$('#teacher-email');if(input)input.focus();return;}
+  if(!password||String(password).length<6){show('Use a password of at least 6 characters.');const pw=$('#teacher-password');if(pw)pw.focus();return;}
+  S.accountError='';
+  accountSending=true;
+  const btn=$('#auth-submit');
+  if(btn){btn.disabled=true;btn.textContent='Creating…';}
+  try{
+    if(S.createAccountMock){
+      await S.createAccountMock(clean,password);
+      if(S.testGate){render();return;}
+    }else if(S.fb&&S.fb.createAccount){
+      const cred=await S.fb.createAccount(S.fb.auth,clean,password);
+      const user=(cred&&cred.user)||(S.fb.auth&&S.fb.auth.currentUser);
+      S.verifySendFailed=false;
+      if(user&&S.fb.sendVerification){
+        try{await S.fb.sendVerification(user);}catch(err){S.verifySendFailed=true;}
+      }
+      handleAuthUser(user);
+    }else show('Creating an account is not available yet.');
+  }catch(e){show(KenjLevelAccess.createAccountMessage(e&&e.code));}
+  finally{
+    accountSending=false;
+    const live=$('#auth-submit');
+    if(live){live.disabled=false;live.textContent=S.authMode==='create'?'Create account':'Sign in';}
   }
 }
 function render(){
@@ -1618,14 +1665,15 @@ document.addEventListener('click',async e=>{
     const base=st.locks||KenjLevelAccess.emptyLocks();
     saveLevelLocks(KenjLevelAccess.toggleLock(base,t.dataset.l,!base[t.dataset.l]));
     return;}
-  if(a==='level-sign-out'){S.testGate=false;S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.gate='signed-out';stopAccessWatch();bindFirebaseProgress(null);if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='level-sign-out'){S.testGate=false;S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.gate='signed-out';S.verifySendFailed=false;S.accountError='';stopAccessWatch();bindFirebaseProgress(null);if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='auth-mode'){const mode=t.dataset.mode==='create'?'create':'sign-in';if(S.authMode===mode||accountSending||resetSending)return;S.authMode=mode;S.accountError='';S.resetNotice=null;render();const focus=$('#teacher-email');if(focus)focus.focus();return;}
   if(a==='forgot-password'){forgotPassword();return;}
   if(a==='approve-student'){setStudentGrant(t.dataset.uid,'approved');return;}
   if(a==='revoke-student'){setStudentGrant(t.dataset.uid,'revoked');return;}
   if(a==='send-verify'){
     const user=S.fb&&S.fb.auth&&S.fb.auth.currentUser;
     if(!user||!S.fb.sendVerification){toast('Sign in again before sending the confirmation email.');return;}
-    try{await S.fb.sendVerification(user);toast('Confirmation email sent. Open it, then choose I have confirmed it.');}
+    try{await S.fb.sendVerification(user);S.verifySendFailed=false;toast('Confirmation email sent. Open it, then choose I have confirmed it.');}
     catch(e){toast(e&&e.code==='auth/too-many-requests'?'Wait a moment before sending another confirmation email.':'Could not send the confirmation email. Try again.');}
     return;}
   if(a==='recheck-verify'){
@@ -1672,7 +1720,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t
 document.addEventListener('change',e=>{if(e.target.id==='accent'){S.accent=e.target.value;lsSet('kenj-accent',S.accent);}});
 document.addEventListener('submit',async e=>{
   const f=e.target;
-  if(f.id==='level-teacher-form'){e.preventDefault();const email=$('#teacher-email').value,password=$('#teacher-password').value;const pw=$('#teacher-password');if(pw)pw.value='';signInTeacher(email,password);return;}
+  if(f.id==='level-teacher-form'){e.preventDefault();const email=$('#teacher-email').value,password=$('#teacher-password').value;const pw=$('#teacher-password');if(pw)pw.value='';if(S.authMode==='create')createAccount(email,password);else signInTeacher(email,password);return;}
   if(f.id==='spell-form'){e.preventDefault();const g=S.game;if(!g||g.answered)return;const w=g.words[g.i];const v=$('#spell-in').value;if(!v.trim())return;
     g.answered=true;const ok=norm(v)===norm(w.w);grade(w,ok);const fb=$('#fb');fb.className='feedback '+(ok?'good':'bad');fb.textContent=ok?'Correct! +10':'It is spelled: '+w.w;setTimeout(next,ok?1000:2200);return;}
   if(f.classList.contains('hw-form')){e.preventDefault();await handIn(f);return;}
@@ -1722,6 +1770,9 @@ function installTestHook(){
     seedProgress(partial){partial=partial||{};if(partial.scores)Object.assign(S.prog.scores,partial.scores);if(partial.cards)Object.assign(S.prog.cards,partial.cards);if(partial.xp!=null)S.prog.xp=partial.xp;save();render();},
     showHomework(lessonId){S.assignments=[{id:'hw1',title:'Workbook page',lesson:lessonId,due:'',details:''}];S.db=S.db||{collection:function(){return {onSnapshot:function(){return function(){};}};},doc:function(){return {};}};location.hash='homework';},
     mockPasswordReset(mode){S.resetPasswordMock=async email=>{S.resetCalls=(S.resetCalls||0)+1;S.lastResetEmail=email;if(mode==='slow'){await new Promise(r=>setTimeout(r,400));return;}if(mode==='invalid'){const e=new Error('invalid');e.code='auth/invalid-email';throw e;}if(mode==='rate'){const e=new Error('rate');e.code='auth/too-many-requests';throw e;}if(mode==='offline'){const e=new Error('offline');e.code='auth/network-request-failed';throw e;}if(mode==='missing'){const e=new Error('missing');e.code='auth/user-not-found';throw e;};};S.resetCalls=0;},
+    mockCreateAccount(mode){S.createAccountMock=async (email,password)=>{S.createCalls=(S.createCalls||0)+1;S.lastCreateEmail=email;S.lastCreatePasswordLength=String(password||'').length;if(mode==='slow'){await new Promise(r=>setTimeout(r,400));return;}if(mode==='exists'){const e=new Error('exists');e.code='auth/email-already-in-use';throw e;}if(mode==='invalid'){const e=new Error('invalid');e.code='auth/invalid-email';throw e;}if(mode==='weak'){const e=new Error('weak');e.code='auth/weak-password';throw e;}if(mode==='offline'){const e=new Error('offline');e.code='auth/network-request-failed';throw e;}if(mode==='disabled'){const e=new Error('disabled');e.code='auth/operation-not-allowed';throw e;}if(mode==='domain'){const e=new Error('domain');e.code='auth/unauthorized-domain';throw e;}if(mode==='ok'){S.testGate=true;S.gate='unverified';S.levelTeacher=false;S.teacherUnverified=true;S.teacherEmail=email;S.verifySendFailed=false;return;};};S.createCalls=0;},
+    createCalls(){return S.createCalls||0;},
+    createDebug(){return {email:S.lastCreateEmail||'',length:S.lastCreatePasswordLength||0,stored:Object.prototype.hasOwnProperty.call(S,'lastCreatePassword')};},
     resetCalls(){return S.resetCalls||0;},
     clearResetNotice(){S.resetNotice=null;},
     gate(){return S.gate;},

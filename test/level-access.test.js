@@ -75,6 +75,34 @@ test('password reset uses a generic result and does not grant access', () => {
   assert.equal(access.canStudy(access.accessDecision({ signedIn: false })), false);
 });
 
+test('creating an account does not approve anyone or skip confirmation', () => {
+  const teacher = 'tchmk9@gmail.com';
+  assert.match(access.createAccountMessage('auth/email-already-in-use'), /Sign in instead/);
+  assert.match(access.createAccountMessage('auth/invalid-email'), /valid email/);
+  assert.match(access.createAccountMessage('auth/weak-password'), /6 characters/);
+  assert.match(access.createAccountMessage('auth/network-request-failed'), /connection/);
+  assert.match(access.createAccountMessage('auth/operation-not-allowed'), /turned off/);
+  assert.match(access.createAccountMessage('auth/admin-restricted-operation'), /turned off/);
+  assert.match(access.createAccountMessage('auth/unauthorized-domain'), /not allowed to create/);
+  assert.match(access.createAccountMessage('auth/too-many-requests'), /Wait/);
+  assert.match(access.createAccountMessage(''), /Could not create/);
+  assert.match(access.signInMessage('auth/invalid-credential'), /not recognised/);
+  assert.match(access.signInMessage('auth/user-not-found'), /not recognised/);
+  assert.match(access.signInMessage('auth/unauthorized-domain'), /not allowed to sign in/);
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: false, isTeacher: true }), 'unverified');
+  assert.equal(access.teacherWriteAllowed(teacher, false, [teacher]), false);
+  assert.equal(access.teacherWriteAllowed(teacher, true, [teacher]), true);
+  assert.equal(access.teacherWriteAllowed('student@school.test', true, [teacher]), false);
+  assert.equal(access.canStudy('unverified'), false);
+  assert.equal(access.canStudy('pending'), false);
+  assert.equal(access.accessDecision({
+    signedIn: true,
+    emailVerified: true,
+    isTeacher: false,
+    grantStatus: ''
+  }), 'pending');
+});
+
 test('an unverified allowlisted address cannot write', () => {
   const list = ['tchmk9@gmail.com'];
   assert.equal(access.teacherWriteAllowed('tchmk9@gmail.com', false, list), false);

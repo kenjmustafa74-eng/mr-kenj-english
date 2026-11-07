@@ -15,7 +15,7 @@ test('the page uses the shared lock helper and does not pretend local storage is
   assert.match(index, /gameAllowed\(S\.game\)/);
   assert.doesNotMatch(index, /localStorage\.setItem\(['"]kenj-locks/);
   assert.match(sw, /level-access\.js/);
-  assert.match(sw, /mr-kenj-v6/);
+  assert.match(sw, /mr-kenj-v7/);
   assert.match(sw, /level-access\.config\.js/);
   assert.match(readme, /docs\/level-access\.md/);
 });
