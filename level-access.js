@@ -247,7 +247,30 @@
     if (code === 'auth/invalid-email') return { ok: false, message: 'Enter a valid email address.' };
     if (code === 'auth/too-many-requests') return { ok: false, message: 'Too many requests. Wait a moment and try again.' };
     if (code === 'auth/network-request-failed') return { ok: false, message: 'Could not reach the sign-in service. Check your connection and try again.' };
+    if (code === 'auth/unauthorized-domain') return { ok: false, message: 'This website is not allowed to send a reset message yet. Ask Mr. Kenj to add it to the sign-in settings.' };
     return { ok: false, message: 'Could not send a reset message. Try again.' };
+  }
+
+  function signInMessage(code) {
+    if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found' || code === 'auth/invalid-email') {
+      return 'That email or password was not recognised.';
+    }
+    if (code === 'auth/too-many-requests') return 'Too many sign-in attempts. Wait a moment and try again.';
+    if (code === 'auth/network-request-failed') return 'Could not reach the sign-in service. Check your connection and try again.';
+    if (code === 'auth/unauthorized-domain') return 'This website is not allowed to sign in yet. Ask Mr. Kenj to add it to the sign-in settings.';
+    if (code === 'auth/operation-not-allowed') return 'Email sign-in is turned off for this app.';
+    return 'Could not sign in.';
+  }
+
+  function createAccountMessage(code) {
+    if (code === 'auth/email-already-in-use') return 'An account already exists for that email. Sign in instead.';
+    if (code === 'auth/invalid-email') return 'Enter a valid email address.';
+    if (code === 'auth/weak-password') return 'Use a password of at least 6 characters.';
+    if (code === 'auth/network-request-failed') return 'Could not reach the sign-in service. Check your connection and try again.';
+    if (code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation') return 'Creating accounts is turned off for this app. Ask Mr. Kenj to allow email sign-up.';
+    if (code === 'auth/unauthorized-domain') return 'This website is not allowed to create accounts yet. Ask Mr. Kenj to add it to the sign-in settings.';
+    if (code === 'auth/too-many-requests') return 'Too many attempts. Wait a moment and try again.';
+    return 'Could not create the account. Try again.';
   }
 
   function accessDecision(input) {
@@ -392,6 +415,8 @@
     teacherWriteAllowed: teacherWriteAllowed,
     emailForReset: emailForReset,
     passwordResetMessage: passwordResetMessage,
+    signInMessage: signInMessage,
+    createAccountMessage: createAccountMessage,
     accessDecision: accessDecision,
     canStudy: canStudy,
     validAccessRequest: validAccessRequest,

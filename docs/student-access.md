@@ -18,6 +18,18 @@ The lessons, words and games are inside the public page at GitHub Pages. Signing
 
 Progress on this device is kept separately for each signed-in account. Signing out does not delete it. The next account on the same device does not see it. The first approved account on a device that still has older unsigned progress receives that progress once, and the unsigned copy is then removed.
 
+## Sign up
+
+The signed-out gate and the teacher sign-in both offer **Sign in** and **Sign up**. Sign up calls Firebase Auth `createUserWithEmailAndPassword` (JavaScript SDK 10.14.1, project `general-english-c7371`) with the email and password from that form. The app does not keep the password. There is no separate student list and no extra teacher list: the allowlisted address is still only `tchmk9@gmail.com`, and only after that address is confirmed.
+
+A new account is signed in with an unconfirmed email, so the lessons stay closed. Firebase is asked to send the usual confirmation email. Confirming it does not approve a student, restore a removed student, or change level locks. A confirmed student still waits for the teacher. A confirmed `tchmk9@gmail.com` account can approve students and change locks. Any other confirmed address cannot.
+
+If the address is already registered, the form says so and points back to Sign in. An invalid email, a password shorter than 6 characters, a network failure, a rate limit, a turned-off email provider, and a website that Firebase has not allowed each get their own message. The button shows “Creating…” and ignores a second press.
+
+**Forgot password?** stays on the Sign in form.
+
+The public Auth settings for this project currently allow only `localhost`, `general-english-c7371.firebaseapp.com` and `general-english-c7371.web.app`. `kenjmustafa74-eng.github.io` is not on that list. Until it is added in Firebase Authentication settings, the live site cannot finish sign-up or sign-in. This repository does not change that setting.
+
 ## Forgotten password
 
 **Forgot password?** sits on every sign-in form: the signed-out study gate, and the teacher sign-in shown when someone who can already study opens the teacher screen. It uses the email already typed in that form. The app calls Firebase Auth `sendPasswordResetEmail` (JavaScript SDK 10.14.1, project `general-english-c7371`) with that address only. It does not build its own reset page, and it does not keep the password or the reset code.
