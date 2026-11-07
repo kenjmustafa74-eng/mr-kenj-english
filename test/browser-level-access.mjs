@@ -75,7 +75,9 @@ try {
   let main = await text(page);
   assert(/no lock switch is shown/i.test(main), 'unconfigured page should say no switch is shown');
   assert(await page.evaluate(() => document.querySelectorAll('[data-act="toggle-lock"]').length) === 0, 'unconfigured page showed lock switches');
-  await shot(page, 'screenshot_locks_not_connected.png');
+  assert(/general-english-c7371/.test(main), 'teacher tab did not name the saved project');
+  assert(/not live/i.test(main), 'teacher tab claimed the locks are live');
+  await shot(page, 'screenshot_firebase_settings_saved_locks_off.png');
 
   const other = await browser.newPage();
   await other.setViewport({ width: 1100, height: 900 });
@@ -118,7 +120,7 @@ try {
   }, 'independent locks');
   main = await text(page);
   assert(/Level A: open/.test(main) && /Level B: locked/.test(main) && /Level C: locked/.test(main), 'teacher status line');
-  await shot(page, 'screenshot_teacher_level_switches.png');
+  await shot(page, 'screenshot_teacher_switches_after_config.png');
 
   await waitFor(other, () => {
     const st = window.__KENJ_TEST__ && window.__KENJ_TEST__.state();
@@ -137,7 +139,7 @@ try {
   assert(!/Smoking is a bad habit/.test(main), 'locked deep link showed the lesson text');
   assert(!/Practise this lesson/.test(main), 'locked deep link showed practice actions');
   assert(await page.evaluate(() => document.querySelectorAll('.words').length) === 0, 'locked view rendered the word list');
-  await shot(page, 'screenshot_locked_deep_link.png');
+  await shot(page, 'screenshot_locked_deep_link_after_config.png');
 
   await click(page, '[data-act="level"][data-l="A"]');
   await waitFor(page, () => !document.querySelector('#level-locked') && !!document.querySelector('[data-act="open-lesson"]'), 'open level A');
@@ -207,7 +209,7 @@ try {
   await waitFor(page, () => /Locked/.test(document.querySelector('#main').innerText), 'progress lock label');
   const kept = await page.evaluate(() => window.__KENJ_TEST__.progress());
   assert(kept.scores.B3 === 90 && kept.cards['B3-0'] === 1, 'progress page lost saved Level B work');
-  await shot(page, 'screenshot_progress_kept.png');
+  await shot(page, 'screenshot_progress_kept_after_config.png');
   assert(errors.length === 0, 'page errors: ' + errors.join('\n'));
   console.log('browser level-access checks passed');
 } finally {

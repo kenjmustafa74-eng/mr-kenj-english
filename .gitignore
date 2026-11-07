@@ -1,5 +1,6 @@
 node_modules/
-level-access.config.js
+# level-access.config.js is committed. It holds only the public web config.
+# Never commit a service account, a private key, or a password.
 .firebase/
 .firebaserc
 firebase-debug.log

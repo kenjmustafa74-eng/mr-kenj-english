@@ -240,16 +240,25 @@
     return false;
   }
 
-  function configStatus(config) {
-    var none = { configured: false, teacherEmails: [] };
-    if (!config || typeof config !== 'object') return Object.assign({ reason: 'missing' }, none);
-    if (config.enabled !== true) return Object.assign({ reason: 'disabled' }, none);
-    var fb = config.firebase;
-    if (!fb || typeof fb !== 'object') return Object.assign({ reason: 'placeholder' }, none);
-    var keys = ['apiKey', 'authDomain', 'projectId', 'appId'];
-    for (var i = 0; i < keys.length; i++) {
-      if (looksPlaceholder(fb[keys[i]])) return Object.assign({ reason: 'placeholder' }, none);
+  function firebaseParts(config) {
+    var fb = config && config.firebase;
+    var projectId = '';
+    var ready = false;
+    if (fb && typeof fb === 'object') {
+      ready = ['apiKey', 'authDomain', 'projectId', 'appId'].every(function (key) {
+        return !looksPlaceholder(fb[key]);
+      });
+      if (typeof fb.projectId === 'string' && !looksPlaceholder(fb.projectId)) projectId = fb.projectId.trim();
     }
+    return { projectId: projectId, firebaseReady: ready };
+  }
+
+  function configStatus(config) {
+    var parts = firebaseParts(config);
+    var base = { configured: false, teacherEmails: [], projectId: parts.projectId, firebaseReady: parts.firebaseReady };
+    if (!config || typeof config !== 'object') return { configured: false, reason: 'missing', teacherEmails: [], projectId: '', firebaseReady: false };
+    if (config.enabled !== true) return Object.assign(base, { reason: 'disabled' });
+    if (!parts.firebaseReady) return Object.assign(base, { reason: 'placeholder' });
     var emails = Array.isArray(config.teacherEmails) ? config.teacherEmails : [];
     var real = [];
     for (var j = 0; j < emails.length; j++) {
@@ -258,8 +267,8 @@
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) continue;
       real.push(email);
     }
-    if (!real.length) return Object.assign({ reason: 'no-teacher-email' }, none);
-    return { configured: true, reason: 'ready', teacherEmails: real };
+    if (!real.length) return Object.assign(base, { reason: 'no-teacher-email' });
+    return { configured: true, reason: 'ready', teacherEmails: real, projectId: parts.projectId, firebaseReady: true };
   }
 
   function resolveBoot(input) {

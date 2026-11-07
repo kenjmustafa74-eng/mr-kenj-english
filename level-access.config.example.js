@@ -1,8 +1,7 @@
-/* Copy this file to level-access.config.js (that name is gitignored).
+/* Shape reference only. The app reads level-access.config.js.
    Do not put a private key, a service-account file, or a password in here.
    The Firebase web config is public by design. Access is limited by firestore.rules.
-   Leave enabled set to false until the rules are deployed and a teacher user exists.
-   Firebase's free Spark plan is one way to host this. It is not already set up. */
+   Leave enabled set to false until the rules are deployed and a teacher user exists. */
 window.KENJ_LEVEL_ACCESS = {
   enabled: false,
   firebase: {

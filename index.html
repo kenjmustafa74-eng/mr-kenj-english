@@ -932,7 +932,8 @@ function accessBanner(){
   const st=accessSnap();
   if(st.mode==='booting'||st.mode==='checking') return '<div class="banner" id="level-access-status">Checking which levels Mr. Kenj has opened. Lessons stay closed until that check finishes.</div>';
   if(st.mode==='unconfigured'){
-    const why=S.accessCfg.reason==='disabled'?'The settings file is present, but level locks are turned off.':
+    const why=S.accessCfg.reason==='disabled'&&S.accessCfg.firebaseReady?'Firebase web settings are saved, but level locks are switched off until a teacher is listed and the security rules are deployed.':
+      S.accessCfg.reason==='disabled'?'The settings file is present, but level locks are turned off.':
       S.accessCfg.reason==='placeholder'?'The settings file still has placeholder text, so level locks are not connected.':
       S.accessCfg.reason==='no-teacher-email'?'The settings file has no teacher email yet, so level locks are not connected.':
       'Level locks are not connected yet.';
@@ -962,11 +963,14 @@ function levelLockButtons(){
 function viewLevelAccessPanel(){
   const st=accessSnap();
   if(!st.configured){
-    const reason=S.accessCfg.reason==='disabled'?'A settings file is present, but level locks are turned off. No lock switch is shown.':
+    const project=S.accessCfg.firebaseReady&&S.accessCfg.projectId?esc(S.accessCfg.projectId):'';
+    const reason=project?'Firebase web settings are saved for '+project+'. Level locks are not live, so no lock switch is shown. No teacher email or user id is listed. Writes stay denied until that teacher is added here and in the security rules, and those rules are deployed.':
+      S.accessCfg.reason==='disabled'?'A settings file is present, but level locks are turned off. No lock switch is shown.':
       S.accessCfg.reason==='placeholder'?'The settings file still has placeholder text, so it is not connected. No lock switch is shown.':
       S.accessCfg.reason==='no-teacher-email'?'The settings file has no real teacher email yet, so it is not connected. No lock switch is shown.':
       'Level locks are not connected. There is no shared store for this copy, so no lock switch is shown. A switch kept in this browser would not change other students\' devices.';
-    return '<div class="panel" id="level-access-panel"><div class="eyebrow">Level access</div><h3 style="font-size:20px">Class level locks are not live</h3><p style="margin:0">'+reason+'</p><p style="margin:8px 0 0">Level locks for every student need a shared store. Saved progress stays on each device. Passing a lesson does not open a locked level. The setup steps are in docs/level-access.md. Firebase\'s free Spark plan is an optional way to host the setting. It is not already set up here.</p><p class="small muted" style="margin:8px 0 0">This app is a public web page. A lock can close a level inside the app. It cannot stop someone from reading the page file.</p></div>';
+    const follow=project?'Every level stays open on this device. Passing a lesson does not open a locked level. The remaining steps are in docs/level-access.md.':'Level locks for every student need a shared store. Saved progress stays on each device. Passing a lesson does not open a locked level. The setup steps are in docs/level-access.md.';
+    return '<div class="panel" id="level-access-panel"><div class="eyebrow">Level access</div><h3 style="font-size:20px">Class level locks are not live</h3><p style="margin:0">'+reason+'</p><p style="margin:8px 0 0">'+follow+'</p><p class="small muted" style="margin:8px 0 0">This app is a public web page. A lock can close a level inside the app. It cannot stop someone from reading the page file.</p></div>';
   }
   let body='';
   if(st.mode==='checking'||st.mode==='booting') body+='<p style="margin:0">Current settings are still loading. Switches stay off until they load, so a blank page cannot overwrite the class.</p>';

@@ -8,11 +8,11 @@ This page is a public web app. A lock closes that level inside the app. It does 
 
 Progress is still saved in the browser on each device (`kenj-prog` in local storage). Homework hand-in, the class list and “Ask Mr. Kenj” still need the hosted class tools. On GitHub Pages those hosted tools are inactive, which matches the note in the README.
 
-Level locks are separate from those hosted tools. They need a shared store that students can read and only a signed-in teacher can write. Nothing in this repository is already connected to such a store. Until the owner finishes the setup below, the app stays usable and says so. It does not show lock switches, because a switch stored only in this browser would not change anyone else’s device.
+Level locks are separate from those hosted tools. They need a shared store that students can read and only a signed-in teacher can write.
 
-The app is **code-ready** for that store. It is **not live-ready** until the owner creates the project, deploys the rules, adds the config file and signs in. Do not treat a successful page load as proof that locks are shared.
+The public web settings for the General English Firebase project `general-english-c7371` are saved in `level-access.config.js`. Analytics is not used. `enabled` is **false**. No teacher email or user id has been supplied, so the security rules still name only a placeholder address and a real account cannot write. The app does not show lock switches and does not call the database. Every level stays open on the device, and the Teacher tab says the locks are not live.
 
-Firebase’s free Spark plan is an optional way to host the single settings document. It is not a requirement, and this repository does not contain a Firebase project or any credentials.
+Do not treat a successful page load as proof that locks are shared. The page is **code-ready** for this project. It is **not live** until a teacher is listed, Email/Password sign-in exists for that teacher, Firestore is created, and `firestore.rules` are deployed. Then set `enabled` to `true`.
 
 ## Defaults
 
@@ -67,25 +67,23 @@ Students do not need an account to study or to read the locks. The security rule
 
 The page also refuses to build a write unless the signed-in email is on the teacher list. The rules are the real control. A student signed in with another email cannot change the class setting.
 
-## Owner setup
+## Owner setup still required
 
-Do this in the owner’s own Firebase project. Do not reuse another app’s config. No project is created by the app.
+The web settings are already in `level-access.config.js`. Do not paste another app’s config over them. Nothing in this repository deploys rules, creates users, or turns on billing.
 
-1. Create a Firebase project and stay on the free Spark plan unless you choose otherwise.
-2. Add a web app and copy its config. You will need the api key, auth domain, project id and app id.
-3. In Authentication, turn on Email/Password and create the teacher user. Put that email, in lower case, in both places below.
-4. Create a Cloud Firestore database.
-5. In `firestore.rules`, replace `replace-with-teacher@example.com` with that email. Add further quoted emails inside the same list if more than one teacher should edit the same global settings.
-6. From this directory, after installing the Firebase CLI and logging in yourself, deploy only the rules:
+1. In Authentication for this project, turn on Email/Password and create the teacher user. A teacher email or user id has not been chosen in this repository.
+2. Create a Cloud Firestore database if it does not exist yet.
+3. In `firestore.rules`, replace `replace-with-teacher@example.com` with that teacher’s email, in lower case. Add further quoted emails inside the same list if more than one teacher should edit the same global settings. The placeholder matches no real account, so writes stay denied.
+4. From this directory, after you log in to the Firebase CLI yourself, deploy only the rules to project `general-english-c7371`:
 
    ```bash
    firebase deploy --only firestore:rules
    ```
 
-   `firebase.json` points at `firestore.rules`. There is no `.firebaserc` in this repository. The CLI will ask you to choose the project, or you can add `.firebaserc` locally (it is gitignored).
-7. Copy `level-access.config.example.js` to `level-access.config.js`. Set `enabled` to `true`, paste the web config, and set `teacherEmails` to the same lower-case address. Do not commit `level-access.config.js`. Do not put a password or a service-account file in it.
-8. Publish the site, including `level-access.js` and `level-access.config.js`, to GitHub Pages (or open it over http on your machine). The config file has to be served beside `index.html`.
-9. Open the Teacher tab, sign in, and lock or open each level. Other open devices should follow the change. Students do not sign in.
+   `firebase.json` points at `firestore.rules`. There is no `.firebaserc` in this repository. Choose this project when the CLI asks, or add `.firebaserc` locally (it is gitignored).
+5. In `level-access.config.js`, set `teacherEmails` to that same lower-case address and set `enabled` to `true`. Do not put a password or a service-account file in it.
+6. Publish the site. The config file has to be served beside `index.html`.
+7. Open the Teacher tab, sign in, and lock or open each level. Other open devices should follow the change. Students do not sign in.
 
 If the rules and the email list disagree, the save is refused and the previous locks stay as they are.
 
@@ -104,6 +102,7 @@ npm run test:browser
 | | Code-ready in this repository | Live for the class |
 | --- | --- | --- |
 | Lock and open screens, deep links, saved progress | Yes | Only after a real document is being read |
-| Teacher sign-in and shared updates | The code is wired | No, until the steps above are done |
-| Security rules | Written and checked as text | Not deployed from here |
-| GitHub Pages build | Static files, including the new script | Still has no store until the config file is published by the owner |
+| Web settings for `general-english-c7371` | Saved, with locks switched off | Not used for live locks while `enabled` is false |
+| Teacher sign-in and shared updates | The code is wired | No teacher email or user id is listed, and no teacher user was created from here |
+| Security rules | Written and checked as text; writes denied for every real account | Not deployed from here |
+| GitHub Pages build | Static files, including the web settings | Publishing the files does not deploy rules or create the database |

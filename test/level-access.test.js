@@ -139,8 +139,27 @@ test('a loaded file that is still a placeholder clears stored locks', () => {
   assert.equal(decision.clearStored, true);
 });
 
+test('saved web settings stay off until a teacher is listed', () => {
+  const status = access.configStatus({
+    enabled: false,
+    firebase: {
+      apiKey: 'a'.repeat(20),
+      authDomain: 'general-english-c7371.firebaseapp.com',
+      projectId: 'general-english-c7371',
+      appId: '1:2:web:abc'
+    },
+    teacherEmails: ['replace-with-teacher@example.com']
+  });
+  assert.equal(status.configured, false);
+  assert.equal(status.reason, 'disabled');
+  assert.equal(status.firebaseReady, true);
+  assert.equal(status.projectId, 'general-english-c7371');
+  assert.deepEqual(status.teacherEmails, []);
+});
+
 test('disabled and ready config are told apart', () => {
   assert.equal(access.configStatus({ enabled: false }).reason, 'disabled');
+  assert.equal(access.configStatus({ enabled: false }).firebaseReady, false);
   assert.equal(access.configStatus(null).reason, 'missing');
   const ready = access.configStatus({
     enabled: true,
