@@ -983,9 +983,9 @@ function viewLevelAccessPanel(){
   if(S.teacherUnverified){
     body+='<div class="banner" id="teacher-unverified"><b>Confirm this address before changing locks.</b> Signed in as '+esc(S.teacherEmail)+'. Firebase has not confirmed this address yet, so this account cannot write the class settings. Open the confirmation message, then choose I have confirmed it. Level locks stay unchanged until then.</div><div class="row" style="margin-top:8px"><button class="btn primary" type="button" data-act="send-verify">Send confirmation email</button><button class="btn" type="button" data-act="recheck-verify">I have confirmed it</button><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
   }else if(!S.levelTeacher){
-    body+='<p style="margin:8px 0 0">Sign in with the teacher email. Students do not need an account, and they cannot change these locks.</p>';
+    body+='<p style="margin:8px 0 0">Sign in with the teacher email to change these locks. Students cannot change them.</p>';
     if(st.reason==='unavailable'||S.accessCfg.reason==='unavailable') body+='<p class="small muted" style="margin:8px 0 0">Teacher sign-in needs the settings file, which did not load. Locked levels stay locked.</p>';
-    else body+='<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">Teacher email</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div><button class="btn primary" type="submit">Sign in</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p></form>';
+    else body+=signInFields('Teacher email');
   }else{
     body+='<p style="margin:8px 0">Signed in as '+esc(S.teacherEmail)+'. These switches are one setting for every student.</p>'+levelLockButtons()+accessAdminHtml()+'<div style="margin-top:8px"><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
   }
@@ -1141,7 +1141,7 @@ async function startLevelAccess(){
     const app=appMod.initializeApp(config.firebase);
     const auth=authMod.getAuth(app);
     const db=fsMod.getFirestore(app);
-    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification};
+    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification,resetPassword:authMod.sendPasswordResetEmail};
     const ref=fsMod.doc(db,'settings','levelAccess');
     if(accessUnsub){accessUnsub();accessUnsub=null;}
     accessUnsub=fsMod.onSnapshot(ref,snap=>{
@@ -1251,8 +1251,37 @@ function accessGate(){
   if(S.gate==='signed-out'||!S.fb) return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Sign in</h2><p>Only students Mr. Kenj has approved can study here. Sign in with the email and password for this app.</p>'+signInFields()+'</section>';
   return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Sign-in is unavailable</h2><p class="muted">The lessons stay closed because access could not be checked. Try again when you are online.</p></section>';
 }
-function signInFields(){
-  return '<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">Email</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div><button class="btn primary" type="submit">Sign in</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p></form>';
+function signInFields(emailLabel){
+  const notice=S.resetNotice;
+  const status=notice?'<p id="password-reset-status" class="feedback'+(notice.bad?' bad':'')+'" role="status" aria-live="polite">'+esc(notice.message)+'</p>':'<p id="password-reset-status" class="feedback" role="status" aria-live="polite" hidden></p>';
+  return '<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">'+esc(emailLabel||'Email')+'</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div class="row"><button class="btn primary" type="submit">Sign in</button><button class="btn" type="button" id="forgot-password" data-act="forgot-password" aria-describedby="password-reset-status"'+(resetSending?' disabled':'')+'>'+(resetSending?'Sending…':'Forgot password?')+'</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p>'+status+'</form>';
+}
+let resetSending=false;
+async function forgotPassword(){
+  if(resetSending) return;
+  const input=$('#teacher-email');
+  const email=KenjLevelAccess.emailForReset(input&&input.value);
+  const show=(msg,bad)=>{
+    S.resetNotice={message:msg,bad:!!bad};
+    const status=$('#password-reset-status');
+    if(!status)return;
+    status.hidden=false;status.className='feedback'+(bad?' bad':'');status.textContent=msg;
+  };
+  if(!email){show('Enter the email address for your account.',true);if(input)input.focus();return;}
+  const finish=(code)=>{const out=KenjLevelAccess.passwordResetMessage(code);show(out.message,!out.ok);if(out.ok){const pw=$('#teacher-password');if(pw)pw.value='';}};
+  resetSending=true;
+  const btn=$('#forgot-password');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    if(S.resetPasswordMock){await S.resetPasswordMock(email);finish(null);}
+    else if(S.fb&&S.fb.resetPassword){await S.fb.resetPassword(S.fb.auth,email);finish(null);}
+    else show('Password reset is not available yet.',true);
+  }catch(e){finish(e&&e.code);}
+  finally{
+    resetSending=false;
+    const live=$('#forgot-password');
+    if(live){live.disabled=false;live.textContent='Forgot password?';}
+  }
 }
 function render(){
   const m=$('#main');
@@ -1590,6 +1619,7 @@ document.addEventListener('click',async e=>{
     saveLevelLocks(KenjLevelAccess.toggleLock(base,t.dataset.l,!base[t.dataset.l]));
     return;}
   if(a==='level-sign-out'){S.testGate=false;S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.gate='signed-out';stopAccessWatch();bindFirebaseProgress(null);if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='forgot-password'){forgotPassword();return;}
   if(a==='approve-student'){setStudentGrant(t.dataset.uid,'approved');return;}
   if(a==='revoke-student'){setStudentGrant(t.dataset.uid,'revoked');return;}
   if(a==='send-verify'){
@@ -1691,6 +1721,10 @@ function installTestHook(){
     signIn(){if(!S.testMemory)return;S.levelTeacher=true;S.teacherEmail='teacher@example.com';render();},
     seedProgress(partial){partial=partial||{};if(partial.scores)Object.assign(S.prog.scores,partial.scores);if(partial.cards)Object.assign(S.prog.cards,partial.cards);if(partial.xp!=null)S.prog.xp=partial.xp;save();render();},
     showHomework(lessonId){S.assignments=[{id:'hw1',title:'Workbook page',lesson:lessonId,due:'',details:''}];S.db=S.db||{collection:function(){return {onSnapshot:function(){return function(){};}};},doc:function(){return {};}};location.hash='homework';},
+    mockPasswordReset(mode){S.resetPasswordMock=async email=>{S.resetCalls=(S.resetCalls||0)+1;S.lastResetEmail=email;if(mode==='slow'){await new Promise(r=>setTimeout(r,400));return;}if(mode==='invalid'){const e=new Error('invalid');e.code='auth/invalid-email';throw e;}if(mode==='rate'){const e=new Error('rate');e.code='auth/too-many-requests';throw e;}if(mode==='offline'){const e=new Error('offline');e.code='auth/network-request-failed';throw e;}if(mode==='missing'){const e=new Error('missing');e.code='auth/user-not-found';throw e;};};S.resetCalls=0;},
+    resetCalls(){return S.resetCalls||0;},
+    clearResetNotice(){S.resetNotice=null;},
+    gate(){return S.gate;},
     state(){return accessSnap();},
     progress(){return JSON.parse(JSON.stringify(S.prog));}
   };

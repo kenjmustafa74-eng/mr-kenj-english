@@ -86,7 +86,7 @@ try {
   await page.evaluate(() => window.__KENJ_TEST__.setAccess('approved', 'level-lock-student'));
   await waitFor(page, () => !!document.querySelector('[data-act="open-lesson"]'), 'approved student lessons');
   const swText = await page.evaluate(async () => (await fetch('sw.js')).text());
-  assert(/mr-kenj-v5/.test(swText) && /level-access\.config\.js/.test(swText), 'service worker does not refresh the level-lock settings');
+  assert(/mr-kenj-v6/.test(swText) && /level-access\.config\.js/.test(swText), 'service worker does not refresh the level-lock settings');
 
   const other = await browser.newPage();
   await other.setViewport({ width: 1100, height: 900 });
