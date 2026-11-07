@@ -62,6 +62,19 @@ test('study access fails closed unless the teacher or an approved student is sig
   assert.equal(access.validGrant({ status: 'approved', updatedAt: 10, updatedBy: 'tchmk9@gmail.com' }, 'tchmk9@gmail.com'), true);
 });
 
+test('password reset uses a generic result and does not grant access', () => {
+  const success = 'If an account exists for that email, a reset message has been sent. Check your inbox.';
+  assert.equal(access.emailForReset('  student@school.test  '), 'student@school.test');
+  assert.equal(access.emailForReset('not-an-email'), '');
+  assert.equal(access.emailForReset(''), '');
+  assert.deepEqual(access.passwordResetMessage(null), { ok: true, message: success });
+  assert.deepEqual(access.passwordResetMessage('auth/user-not-found'), { ok: true, message: success });
+  assert.equal(access.passwordResetMessage('auth/invalid-email').ok, false);
+  assert.match(access.passwordResetMessage('auth/too-many-requests').message, /Too many requests/);
+  assert.match(access.passwordResetMessage('auth/network-request-failed').message, /connection/);
+  assert.equal(access.canStudy(access.accessDecision({ signedIn: false })), false);
+});
+
 test('an unverified allowlisted address cannot write', () => {
   const list = ['tchmk9@gmail.com'];
   assert.equal(access.teacherWriteAllowed('tchmk9@gmail.com', false, list), false);

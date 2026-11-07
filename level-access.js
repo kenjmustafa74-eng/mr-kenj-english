@@ -235,6 +235,21 @@
     return emailVerified === true && isTeacherEmail(email, allowList);
   }
 
+  function emailForReset(value) {
+    var email = String(value || '').trim();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+  }
+
+  function passwordResetMessage(code) {
+    if (!code || code === 'auth/user-not-found') {
+      return { ok: true, message: 'If an account exists for that email, a reset message has been sent. Check your inbox.' };
+    }
+    if (code === 'auth/invalid-email') return { ok: false, message: 'Enter a valid email address.' };
+    if (code === 'auth/too-many-requests') return { ok: false, message: 'Too many requests. Wait a moment and try again.' };
+    if (code === 'auth/network-request-failed') return { ok: false, message: 'Could not reach the sign-in service. Check your connection and try again.' };
+    return { ok: false, message: 'Could not send a reset message. Try again.' };
+  }
+
   function accessDecision(input) {
     input = input || {};
     if (!input.signedIn) return 'signed-out';
@@ -375,6 +390,8 @@
     canStartScope: canStartScope,
     isTeacherEmail: isTeacherEmail,
     teacherWriteAllowed: teacherWriteAllowed,
+    emailForReset: emailForReset,
+    passwordResetMessage: passwordResetMessage,
     accessDecision: accessDecision,
     canStudy: canStudy,
     validAccessRequest: validAccessRequest,

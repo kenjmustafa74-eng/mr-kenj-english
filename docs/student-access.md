@@ -18,6 +18,14 @@ The lessons, words and games are inside the public page at GitHub Pages. Signing
 
 Progress on this device is kept separately for each signed-in account. Signing out does not delete it. The next account on the same device does not see it. The first approved account on a device that still has older unsigned progress receives that progress once, and the unsigned copy is then removed.
 
+## Forgotten password
+
+**Forgot password?** sits on every sign-in form: the signed-out study gate, and the teacher sign-in shown when someone who can already study opens the teacher screen. It uses the email already typed in that form. The app calls Firebase Auth `sendPasswordResetEmail` (JavaScript SDK 10.14.1, project `general-english-c7371`) with that address only. It does not build its own reset page, and it does not keep the password or the reset code.
+
+The success line is the same whether or not an account exists: “If an account exists for that email, a reset message has been sent. Check your inbox.” An empty or invalid address, a rate limit, and a network failure each say what went wrong without naming an account. The button shows “Sending…” and ignores a second press until the request finishes.
+
+A reset message does not confirm the email address, approve a student, restore a removed student, or change the level locks. The person still signs in afterwards and passes the same checks.
+
 ## Deployment order
 
 1. Publish this version of `firestore.rules` to `general-english-c7371`. Do not publish the app first if you want students to be checked against the new rules immediately. If the app is published first, unapproved people still cannot pass the sign-in screen, and the teacher can sign in.
