@@ -1,7 +1,7 @@
 /* Public Firebase web settings for the General English app.
-   enabled stays false on purpose. A teacher email or user id has not been
-   listed, and these rules have not been deployed from this repository.
-   Until both are done, the app must not treat level locks as live.
+   The only teacher address is tchmk9@gmail.com. enabled stays false until
+   Email/Password sign-in exists, Firestore is created, and firestore.rules
+   are deployed. Until then the app must not treat level locks as live.
    Do not add a private key, a service account, or a password.
    Analytics is not used. */
 window.KENJ_LEVEL_ACCESS = {
@@ -14,7 +14,6 @@ window.KENJ_LEVEL_ACCESS = {
     messagingSenderId: "734532385308",
     appId: "1:734532385308:web:36e1ea30442838423d3dd9"
   },
-  /* Not a real teacher. Replace this before setting enabled to true,
-     and use the same address in firestore.rules. */
-  teacherEmails: ["replace-with-teacher@example.com"]
+  /* The only account allowed to write, once the rules are deployed. */
+  teacherEmails: ["tchmk9@gmail.com"]
 };

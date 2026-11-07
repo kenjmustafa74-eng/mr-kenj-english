@@ -29,7 +29,8 @@ test('rules publish one readable document and let only the listed teacher write 
   assert.match(rules, /allow read, write: if false;/);
   assert.doesNotMatch(rules, /allow write: if true/);
   assert.doesNotMatch(rules, /allow read, write: if true/);
-  assert.match(rules, /replace-with-teacher@example\.com/);
+  assert.match(rules, /tchmk9@gmail\.com/);
+  assert.doesNotMatch(rules, /allow write: if request\.auth != null;/);
   assert.equal(firebaseJson.firestore.rules, 'firestore.rules');
 });
 
@@ -54,7 +55,8 @@ test('the saved web settings do not turn level locks on', () => {
   assert.equal(status.reason, 'disabled');
   assert.equal(status.firebaseReady, true);
   assert.equal(status.projectId, 'general-english-c7371');
-  assert.deepEqual(status.teacherEmails, []);
+  assert.deepEqual(status.teacherEmails, ['tchmk9@gmail.com']);
+  assert.equal(Array.from(cfg.teacherEmails).join(','), 'tchmk9@gmail.com');
   const text = fs.readFileSync(path.join(__dirname, '..', 'level-access.config.js'), 'utf8');
   assert.doesNotMatch(text, /measurementId|BEGIN PRIVATE KEY|private_key/);
 });

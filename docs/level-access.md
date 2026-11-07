@@ -10,7 +10,7 @@ Progress is still saved in the browser on each device (`kenj-prog` in local stor
 
 Level locks are separate from those hosted tools. They need a shared store that students can read and only a signed-in teacher can write.
 
-The public web settings for the General English Firebase project `general-english-c7371` are saved in `level-access.config.js`. Analytics is not used. `enabled` is **false**. No teacher email or user id has been supplied, so the security rules still name only a placeholder address and a real account cannot write. The app does not show lock switches and does not call the database. Every level stays open on the device, and the Teacher tab says the locks are not live.
+The public web settings for the General English Firebase project `general-english-c7371` are saved in `level-access.config.js`. Analytics is not used. `enabled` is **false**. The only teacher address, in both the settings and `firestore.rules`, is `tchmk9@gmail.com`. Any other signed-in account is denied. The rules are not deployed, Email/Password sign-in was not found, and Cloud Firestore is not enabled, so the app does not show lock switches and does not call the database. Every level stays open on the device, and the Teacher tab says the locks are not live.
 
 Do not treat a successful page load as proof that locks are shared. The page is **code-ready** for this project. It is **not live** until a teacher is listed, Email/Password sign-in exists for that teacher, Firestore is created, and `firestore.rules` are deployed. Then set `enabled` to `true`.
 
@@ -71,19 +71,18 @@ The page also refuses to build a write unless the signed-in email is on the teac
 
 The web settings are already in `level-access.config.js`. Do not paste another app’s config over them. Nothing in this repository deploys rules, creates users, or turns on billing.
 
-1. In Authentication for this project, turn on Email/Password and create the teacher user. A teacher email or user id has not been chosen in this repository.
-2. Create a Cloud Firestore database if it does not exist yet.
-3. In `firestore.rules`, replace `replace-with-teacher@example.com` with that teacher’s email, in lower case. Add further quoted emails inside the same list if more than one teacher should edit the same global settings. The placeholder matches no real account, so writes stay denied.
-4. From this directory, after you log in to the Firebase CLI yourself, deploy only the rules to project `general-english-c7371`:
+1. In Authentication for this project, turn on Email/Password and create the user `tchmk9@gmail.com`. That address is already the only teacher in the settings and in `firestore.rules`. No password is stored in this repository, and the user was not created from here.
+2. Create a Cloud Firestore database. A read-only check found the Cloud Firestore API is not enabled on this project yet.
+3. The rules already allow a write only when the signed-in email is `tchmk9@gmail.com`. They deny every other account, deletes, and every other path. From this directory, after you log in to the Firebase CLI yourself, deploy only those rules to project `general-english-c7371`:
 
    ```bash
    firebase deploy --only firestore:rules
    ```
 
    `firebase.json` points at `firestore.rules`. There is no `.firebaserc` in this repository. Choose this project when the CLI asks, or add `.firebaserc` locally (it is gitignored).
-5. In `level-access.config.js`, set `teacherEmails` to that same lower-case address and set `enabled` to `true`. Do not put a password or a service-account file in it.
-6. Publish the site. The config file has to be served beside `index.html`.
-7. Open the Teacher tab, sign in, and lock or open each level. Other open devices should follow the change. Students do not sign in.
+4. In `level-access.config.js`, set `enabled` to `true`. The teacher address is already `tchmk9@gmail.com`. Do not put a password or a service-account file in it.
+5. Publish the site. The config file has to be served beside `index.html`.
+6. Open the Teacher tab, sign in, and lock or open each level. Other open devices should follow the change. Students do not sign in.
 
 If the rules and the email list disagree, the save is refused and the previous locks stay as they are.
 
@@ -103,6 +102,6 @@ npm run test:browser
 | --- | --- | --- |
 | Lock and open screens, deep links, saved progress | Yes | Only after a real document is being read |
 | Web settings for `general-english-c7371` | Saved, with locks switched off | Not used for live locks while `enabled` is false |
-| Teacher sign-in and shared updates | The code is wired | No teacher email or user id is listed, and no teacher user was created from here |
+| Teacher sign-in and shared updates | `tchmk9@gmail.com` is the only writer in the settings and the rules | That user was not created from here, and the rules are not deployed |
 | Security rules | Written and checked as text; writes denied for every real account | Not deployed from here |
 | GitHub Pages build | Static files, including the web settings | Publishing the files does not deploy rules or create the database |

@@ -932,7 +932,9 @@ function accessBanner(){
   const st=accessSnap();
   if(st.mode==='booting'||st.mode==='checking') return '<div class="banner" id="level-access-status">Checking which levels Mr. Kenj has opened. Lessons stay closed until that check finishes.</div>';
   if(st.mode==='unconfigured'){
-    const why=S.accessCfg.reason==='disabled'&&S.accessCfg.firebaseReady?'Firebase web settings are saved, but level locks are switched off until a teacher is listed and the security rules are deployed.':
+    const teacher=S.accessCfg.teacherEmails&&S.accessCfg.teacherEmails[0];
+    const why=S.accessCfg.reason==='disabled'&&S.accessCfg.firebaseReady&&teacher?'Firebase web settings are saved and '+esc(teacher)+' is the only teacher address. Level locks stay switched off until sign-in, Firestore, and the security rules are in place.':
+      S.accessCfg.reason==='disabled'&&S.accessCfg.firebaseReady?'Firebase web settings are saved, but level locks are switched off until a teacher is listed and the security rules are deployed.':
       S.accessCfg.reason==='disabled'?'The settings file is present, but level locks are turned off.':
       S.accessCfg.reason==='placeholder'?'The settings file still has placeholder text, so level locks are not connected.':
       S.accessCfg.reason==='no-teacher-email'?'The settings file has no teacher email yet, so level locks are not connected.':
@@ -964,7 +966,9 @@ function viewLevelAccessPanel(){
   const st=accessSnap();
   if(!st.configured){
     const project=S.accessCfg.firebaseReady&&S.accessCfg.projectId?esc(S.accessCfg.projectId):'';
-    const reason=project?'Firebase web settings are saved for '+project+'. Level locks are not live, so no lock switch is shown. No teacher email or user id is listed. Writes stay denied until that teacher is added here and in the security rules, and those rules are deployed.':
+    const teacher=S.accessCfg.teacherEmails&&S.accessCfg.teacherEmails[0]?esc(S.accessCfg.teacherEmails[0]):'';
+    const reason=project&&teacher?'Firebase web settings are saved for '+project+'. The only account that can write, once the rules are deployed, is '+teacher+'. Level locks are not live, so no lock switch is shown. Sign-in and Firestore are not ready, and these rules have not been deployed.':
+      project?'Firebase web settings are saved for '+project+'. Level locks are not live, so no lock switch is shown. No teacher email or user id is listed. Writes stay denied until that teacher is added here and in the security rules, and those rules are deployed.':
       S.accessCfg.reason==='disabled'?'A settings file is present, but level locks are turned off. No lock switch is shown.':
       S.accessCfg.reason==='placeholder'?'The settings file still has placeholder text, so it is not connected. No lock switch is shown.':
       S.accessCfg.reason==='no-teacher-email'?'The settings file has no real teacher email yet, so it is not connected. No lock switch is shown.':

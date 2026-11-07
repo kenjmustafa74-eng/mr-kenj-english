@@ -253,13 +253,8 @@
     return { projectId: projectId, firebaseReady: ready };
   }
 
-  function configStatus(config) {
-    var parts = firebaseParts(config);
-    var base = { configured: false, teacherEmails: [], projectId: parts.projectId, firebaseReady: parts.firebaseReady };
-    if (!config || typeof config !== 'object') return { configured: false, reason: 'missing', teacherEmails: [], projectId: '', firebaseReady: false };
-    if (config.enabled !== true) return Object.assign(base, { reason: 'disabled' });
-    if (!parts.firebaseReady) return Object.assign(base, { reason: 'placeholder' });
-    var emails = Array.isArray(config.teacherEmails) ? config.teacherEmails : [];
+  function listedTeachers(config) {
+    var emails = config && Array.isArray(config.teacherEmails) ? config.teacherEmails : [];
     var real = [];
     for (var j = 0; j < emails.length; j++) {
       var email = String(emails[j] || '').trim().toLowerCase();
@@ -267,8 +262,18 @@
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) continue;
       real.push(email);
     }
-    if (!real.length) return Object.assign(base, { reason: 'no-teacher-email' });
-    return { configured: true, reason: 'ready', teacherEmails: real, projectId: parts.projectId, firebaseReady: true };
+    return real;
+  }
+
+  function configStatus(config) {
+    var parts = firebaseParts(config);
+    var teachers = listedTeachers(config);
+    var base = { configured: false, teacherEmails: teachers, projectId: parts.projectId, firebaseReady: parts.firebaseReady };
+    if (!config || typeof config !== 'object') return { configured: false, reason: 'missing', teacherEmails: [], projectId: '', firebaseReady: false };
+    if (config.enabled !== true) return Object.assign(base, { reason: 'disabled' });
+    if (!parts.firebaseReady) return Object.assign(base, { reason: 'placeholder', teacherEmails: teachers });
+    if (!teachers.length) return Object.assign(base, { reason: 'no-teacher-email' });
+    return { configured: true, reason: 'ready', teacherEmails: teachers, projectId: parts.projectId, firebaseReady: true };
   }
 
   function resolveBoot(input) {

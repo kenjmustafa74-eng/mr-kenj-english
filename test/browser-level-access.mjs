@@ -76,8 +76,9 @@ try {
   assert(/no lock switch is shown/i.test(main), 'unconfigured page should say no switch is shown');
   assert(await page.evaluate(() => document.querySelectorAll('[data-act="toggle-lock"]').length) === 0, 'unconfigured page showed lock switches');
   assert(/general-english-c7371/.test(main), 'teacher tab did not name the saved project');
+  assert(/tchmk9@gmail\.com/.test(main), 'teacher tab did not name the teacher address');
   assert(/not live/i.test(main), 'teacher tab claimed the locks are live');
-  await shot(page, 'screenshot_firebase_settings_saved_locks_off.png');
+  await shot(page, 'screenshot_teacher_email_listed_locks_off.png');
 
   const other = await browser.newPage();
   await other.setViewport({ width: 1100, height: 900 });
