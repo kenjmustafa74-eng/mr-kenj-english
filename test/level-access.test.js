@@ -40,6 +40,28 @@ test('levels lock independently and a pass mark is not part of the document', ()
   assert.equal(ctl.snapshot().locks.A, false);
 });
 
+test('study access fails closed unless the teacher or an approved student is signed in', () => {
+  assert.equal(access.accessDecision({ signedIn: false }), 'signed-out');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: false, isTeacher: true }), 'unverified');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, isTeacher: true }), 'teacher');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, grantStatus: 'approved' }), 'approved');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, grantStatus: 'revoked' }), 'revoked');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true }), 'pending');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, readFailed: true, remembered: 'revoked' }), 'revoked');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, readFailed: true, remembered: 'pending' }), 'pending');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, readFailed: true }), 'blocked');
+  assert.equal(access.accessDecision({ signedIn: true, emailVerified: true, readFailed: true, remembered: 'approved' }), 'approved-offline');
+  assert.equal(access.canStudy('approved'), true);
+  assert.equal(access.canStudy('teacher'), true);
+  assert.equal(access.canStudy('revoked'), false);
+  assert.equal(access.canStudy('pending'), false);
+  assert.equal(access.canStudy('approved-offline'), true);
+  assert.equal(access.validAccessRequest({ email: 'student@school.test', requestedAt: 10, status: 'approved' }, 'student@school.test'), false);
+  assert.equal(access.validAccessRequest({ email: 'student@school.test', requestedAt: 10 }, 'student@school.test'), true);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 10, updatedBy: 'other@school.test' }, 'tchmk9@gmail.com'), false);
+  assert.equal(access.validGrant({ status: 'approved', updatedAt: 10, updatedBy: 'tchmk9@gmail.com' }, 'tchmk9@gmail.com'), true);
+});
+
 test('an unverified allowlisted address cannot write', () => {
   const list = ['tchmk9@gmail.com'];
   assert.equal(access.teacherWriteAllowed('tchmk9@gmail.com', false, list), false);

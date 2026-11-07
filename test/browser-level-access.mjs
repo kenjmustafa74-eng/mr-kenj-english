@@ -77,19 +77,16 @@ try {
   const settled = await page.evaluate(() => window.__KENJ_TEST__.state());
   assert(settled.mode === 'live', 'class lock document was not read, mode ' + settled.mode);
   assert(settled.locks && settled.locks.A === false && settled.locks.B === false && settled.locks.C === false, 'a settings document was already present; this test must not change it');
-  await click(page, 'a[href="#teacher"]');
-  await waitFor(page, () => !!document.querySelector('#level-teacher-form'), 'teacher sign-in form');
+  await waitFor(page, () => !!document.querySelector('#access-gate'), 'sign-in gate');
   let main = await text(page);
-  assert(/Sign in with the teacher email/.test(main), 'teacher tab did not ask for the teacher sign-in');
-  assert(await page.evaluate(() => document.querySelectorAll('[data-act="toggle-lock"]').length) === 0, 'unsigned teacher page showed lock switches');
-  await shot(page, 'screenshot_teacher_sign_in_before_verification.png');
-  await page.goto(origin + '/#learn', { waitUntil: 'domcontentloaded' });
-  await waitFor(page, () => {
-    const st = window.__KENJ_TEST__ && window.__KENJ_TEST__.state();
-    return !!(st && st.mode === 'live' && document.querySelector('[data-act="open-lesson"]'));
-  }, 'open lessons before any teacher lock');
+  assert(/Sign in/.test(main), 'signed-out page did not ask for sign-in');
+  assert(!/My name is Steve/.test(main), 'signed-out page showed lesson words');
+  assert(await page.evaluate(() => document.querySelectorAll('[data-act="open-lesson"],[data-act="toggle-lock"]').length) === 0, 'signed-out page showed study controls');
+  await shot(page, 'screenshot_signed_out_gate.png');
+  await page.evaluate(() => window.__KENJ_TEST__.setAccess('approved', 'level-lock-student'));
+  await waitFor(page, () => !!document.querySelector('[data-act="open-lesson"]'), 'approved student lessons');
   const swText = await page.evaluate(async () => (await fetch('sw.js')).text());
-  assert(/mr-kenj-v4/.test(swText) && /level-access\.config\.js/.test(swText), 'service worker does not refresh the level-lock settings');
+  assert(/mr-kenj-v5/.test(swText) && /level-access\.config\.js/.test(swText), 'service worker does not refresh the level-lock settings');
 
   const other = await browser.newPage();
   await other.setViewport({ width: 1100, height: 900 });

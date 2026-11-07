@@ -881,6 +881,7 @@ const S={db:null,user:null,assets:null,sample:null,uid:null,name:'',teacher:fals
   prog:null,view:'learn',lesson:null,game:null,assignments:[],mySubs:[],classProg:[],profiles:{},subs:{},
   accent:lsGet('kenj-accent')||'en-GB',subFilter:'todo',
   accessCtl:null,accessCfg:{configured:false,reason:'missing',teacherEmails:[]},levelTeacher:false,teacherUnverified:false,teacherEmail:'',
+  gate:'checking',fbUid:null,accessRequests:{},accessGrants:{},testGate:false,
   fb:null,lockSaving:false,testMemory:false};
 function defaultProg(){return{xp:0,streak:0,best:0,lastDay:'',level:'A',cards:{},scores:{},days:{},games:0,perfect:0,hw:0,updatedAt:0};}
 let LSKEY='kenj-prog';
@@ -986,7 +987,7 @@ function viewLevelAccessPanel(){
     if(st.reason==='unavailable'||S.accessCfg.reason==='unavailable') body+='<p class="small muted" style="margin:8px 0 0">Teacher sign-in needs the settings file, which did not load. Locked levels stay locked.</p>';
     else body+='<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">Teacher email</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div><button class="btn primary" type="submit">Sign in</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p></form>';
   }else{
-    body+='<p style="margin:8px 0">Signed in as '+esc(S.teacherEmail)+'. These switches are one setting for every student.</p>'+levelLockButtons()+'<div style="margin-top:8px"><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
+    body+='<p style="margin:8px 0">Signed in as '+esc(S.teacherEmail)+'. These switches are one setting for every student.</p>'+levelLockButtons()+accessAdminHtml()+'<div style="margin-top:8px"><button class="btn sm" type="button" data-act="level-sign-out">Sign out</button></div>';
   }
   if(st.locks){
     body+='<p class="small muted" style="margin:8px 0 0">'+KenjLevelAccess.LEVEL_IDS.map(k=>LEVELS[k].name+': '+(st.locks[k]?'locked':'open')).join(' · ')+(st.updatedAt?' · updated '+fmtDate(st.updatedAt):'')+'</p>';
@@ -994,7 +995,7 @@ function viewLevelAccessPanel(){
   return '<div class="panel" id="level-access-panel"><div class="eyebrow">Level access</div><h3 style="font-size:20px">Levels for every student</h3>'+body+'</div>';
 }
 let testChannel=null;
-let accessUnsub=null;
+let accessUnsub=null,grantUnsub=null,requestListUnsub=null,grantListUnsub=null;
 function listenTestChannel(){
   if(testChannel||!S.testMemory) return;
   try{
@@ -1017,13 +1018,84 @@ async function saveLevelLocks(next){
     toast(code.indexOf('permission-denied')!==-1?'The server refused the change. Check that this email is in the security rules.':'Could not save the level locks. Existing locks stay as they are.');
   }finally{S.lockSaving=false;render();}
 }
-function applyTeacherUser(user){
-  const email=user&&user.email;
-  const listed=KenjLevelAccess.isTeacherEmail(email,S.accessCfg.teacherEmails);
-  const verified=KenjLevelAccess.teacherWriteAllowed(email,!!(user&&user.emailVerified),S.accessCfg.teacherEmails);
-  S.teacherUnverified=!!(listed&&!verified);
-  S.levelTeacher=verified;
-  S.teacherEmail=(S.levelTeacher||S.teacherUnverified)?String(email).trim().toLowerCase():'';
+function stopAccessWatch(){
+  if(grantUnsub){grantUnsub();grantUnsub=null;}
+  if(requestListUnsub){requestListUnsub();requestListUnsub=null;}
+  if(grantListUnsub){grantListUnsub();grantListUnsub=null;}
+}
+function applyStoredGrant(uid,status){
+  const decision=KenjLevelAccess.accessDecision({signedIn:true,emailVerified:true,isTeacher:false,grantStatus:status||'',readFailed:false});
+  S.gate=decision;
+  rememberAccess(uid,decision==='approved'?'approved':decision==='revoked'?'revoked':'pending');
+  if(!studyAllowed()) S.game=null;
+  render();
+}
+function failGrantRead(uid){
+  const remembered=rememberedAccess(uid);
+  S.gate=KenjLevelAccess.accessDecision({signedIn:true,emailVerified:true,isTeacher:false,readFailed:true,remembered:remembered});
+  if(!studyAllowed()) S.game=null;
+  render();
+}
+async function watchStudent(user){
+  stopAccessWatch();
+  const uid=user.uid;
+  const req=S.fb.doc(S.fb.db,'accessRequests',uid);
+  try{
+    const existing=await S.fb.getDoc(req);
+    if(!existing.exists()) await S.fb.setDoc(req,{email:String(user.email).trim().toLowerCase(),requestedAt:Date.now()});
+  }catch(e){}
+  if(S.fbUid!==uid) return;
+  grantUnsub=S.fb.onSnapshot(S.fb.doc(S.fb.db,'accessGrants',uid),snap=>{
+    if(S.testGate||S.fbUid!==uid) return;
+    const status=snap.exists()&&snap.data()?snap.data().status:'';
+    applyStoredGrant(uid,status);
+  },()=>{if(!S.testGate&&S.fbUid===uid) failGrantRead(uid);});
+}
+function watchTeacher(){
+  stopAccessWatch();
+  requestListUnsub=S.fb.onSnapshot(S.fb.collection(S.fb.db,'accessRequests'),snap=>{
+    S.accessRequests={};snap.forEach(d=>{S.accessRequests[d.id]=d.data()||{};});
+    if(S.gate==='teacher'&&S.view==='teacher'&&!S.game) render();
+  },()=>{});
+  grantListUnsub=S.fb.onSnapshot(S.fb.collection(S.fb.db,'accessGrants'),snap=>{
+    S.accessGrants={};snap.forEach(d=>{S.accessGrants[d.id]=d.data()||{};});
+    if(S.gate==='teacher'&&S.view==='teacher'&&!S.game) render();
+  },()=>{});
+}
+function handleAuthUser(user){
+  if(S.testGate) return;
+  if(!user){
+    stopAccessWatch();bindFirebaseProgress(null);
+    S.gate='signed-out';S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.game=null;render();return;
+  }
+  const listed=KenjLevelAccess.isTeacherEmail(user.email,S.accessCfg.teacherEmails);
+  const verified=user.emailVerified===true;
+  bindFirebaseProgress(user.uid);
+  S.teacherEmail=String(user.email||'').trim().toLowerCase();
+  if(!verified){
+    stopAccessWatch();S.gate='unverified';S.teacherUnverified=true;S.levelTeacher=false;S.game=null;render();return;
+  }
+  S.teacherUnverified=false;
+  if(listed){S.gate='teacher';S.levelTeacher=true;watchTeacher();render();return;}
+  S.levelTeacher=false;S.gate='checking';render();watchStudent(user);
+}
+function accessAdminHtml(){
+  if(S.gate!=='teacher') return '';
+  const ids=Object.keys(S.accessRequests||{});
+  let rows=ids.length?ids.map(uid=>{
+    const req=S.accessRequests[uid]||{};
+    const grant=S.accessGrants&&S.accessGrants[uid];
+    const status=grant&&grant.status==='approved'?'Approved':grant&&grant.status==='revoked'?'Removed':'Waiting';
+    return '<div class="sub" id="access-row-'+esc(uid)+'"><div class="row" style="justify-content:space-between"><b>'+esc(req.email||'Student')+'</b><span class="pill">'+status+'</span></div><div class="row"><button class="btn sm primary" type="button" data-act="approve-student" data-uid="'+esc(uid)+'">Approve</button><button class="btn sm" type="button" data-act="revoke-student" data-uid="'+esc(uid)+'">Remove access</button></div></div>';
+  }).join(''):'<p class="muted" style="margin:0">No one has asked to join yet.</p>';
+  return '<div id="access-admin" style="display:grid;gap:8px;margin-top:12px"><h3 style="font-size:18px">Student access</h3><p class="small muted" style="margin:0">Only people you approve can study. You see the email they signed in with, and nothing more.</p>'+rows+'</div>';
+}
+async function setStudentGrant(uid,status){
+  if(S.gate!=='teacher'||!S.fb){toast('Only the confirmed teacher can change access.');return;}
+  try{
+    await S.fb.setDoc(S.fb.doc(S.fb.db,'accessGrants',uid),{status:status,updatedAt:Date.now(),updatedBy:S.teacherEmail});
+    toast(status==='approved'?'Student approved.':'Access removed.');
+  }catch(e){toast('Could not update access. The class rules were not changed.');}
 }
 function teacherAuthMessage(code){
   if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found'||code==='auth/invalid-email') return 'That email or password was not recognised.';
@@ -1041,18 +1113,7 @@ async function signInTeacher(email,password){
   if(!S.fb){show('Level locks are not connected to a sign-in service yet.');return;}
   try{
     await S.fb.signIn(S.fb.auth,email,password);
-    const user=S.fb.auth.currentUser;
-    if(!KenjLevelAccess.isTeacherEmail(user&&user.email,S.accessCfg.teacherEmails)){
-      await S.fb.signOut(S.fb.auth);
-      applyTeacherUser(null);
-      show('This account is not a teacher for this class.');
-      return;
-    }
-    applyTeacherUser(user);
-    if(S.teacherUnverified){
-      show('This address is not confirmed yet. Use the confirmation steps below. Level locks stay unchanged.');
-      render();
-    }
+    handleAuthUser(S.fb.auth.currentUser);
   }catch(e){show(teacherAuthMessage(e&&e.code));}
 }
 async function startLevelAccess(){
@@ -1064,6 +1125,7 @@ async function startLevelAccess(){
   if(!decision.configured){
     clearAccessStored();
     S.accessCtl.noteUnconfigured();
+    S.gate='blocked';
     render();
     return;
   }
@@ -1079,7 +1141,7 @@ async function startLevelAccess(){
     const app=appMod.initializeApp(config.firebase);
     const auth=authMod.getAuth(app);
     const db=fsMod.getFirestore(app);
-    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,setDoc:fsMod.setDoc,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification};
+    S.fb={app:app,auth:auth,db:db,doc:fsMod.doc,getDoc:fsMod.getDoc,setDoc:fsMod.setDoc,collection:fsMod.collection,onSnapshot:fsMod.onSnapshot,signIn:authMod.signInWithEmailAndPassword,signOut:authMod.signOut,sendVerification:authMod.sendEmailVerification};
     const ref=fsMod.doc(db,'settings','levelAccess');
     if(accessUnsub){accessUnsub();accessUnsub=null;}
     accessUnsub=fsMod.onSnapshot(ref,snap=>{
@@ -1088,15 +1150,9 @@ async function startLevelAccess(){
       else S.accessCtl.applySnapshot(snap.data(),Date.now(),{fromCache:fromCache});
       onAccessChanged();
     },err=>{S.accessCtl.applyError(err,Date.now());onAccessChanged();});
-    authMod.onAuthStateChanged(auth,user=>{
-      if(user&&!KenjLevelAccess.isTeacherEmail(user.email,S.accessCfg.teacherEmails)){
-        S.fb.signOut(auth).catch(()=>{});
-        applyTeacherUser(null);
-      }else applyTeacherUser(user);
-      if(S.view==='teacher'&&!S.game) render();
-    });
+    authMod.onAuthStateChanged(auth,user=>{handleAuthUser(user);});
     setTimeout(()=>{if(accessSnap().mode==='checking'){S.accessCtl.applyError({code:'timeout'},Date.now());onAccessChanged();}},12000);
-  }catch(e){S.accessCtl.applyError(e,Date.now());onAccessChanged();}
+  }catch(e){S.accessCtl.applyError(e,Date.now());S.gate='blocked';onAccessChanged();}
 }
 function touchDay(){
   const t=ymd();
@@ -1170,9 +1226,44 @@ function applyHash(){
 function route(){applyHash();render();}
 window.addEventListener('hashchange',route);
 
+function studyAllowed(){return KenjLevelAccess.canStudy(S.gate);}
+function bindFirebaseProgress(uid){
+  if(S.fbUid&&S.prog) lsSet('kenj-prog:fb:'+S.fbUid,JSON.stringify(S.prog));
+  S.fbUid=uid||null;
+  if(!uid){LSKEY='kenj-prog:signed-out';S.prog=defaultProg();return;}
+  LSKEY='kenj-prog:fb:'+uid;
+  const current=readLocal(LSKEY);
+  const empty=!(current.xp>0)&&!Object.keys(current.scores||{}).length&&!Object.keys(current.cards||{}).length;
+  if(empty){
+    const legacy=readLocal('kenj-prog');
+    const has=(legacy.xp>0)||Object.keys(legacy.scores||{}).length||Object.keys(legacy.cards||{}).length;
+    if(has){lsSet(LSKEY,JSON.stringify(legacy));try{localStorage.removeItem('kenj-prog');}catch(e){}}
+  }
+  S.prog=readLocal(LSKEY);
+}
+function rememberAccess(uid,decision){if(uid) lsSet('kenj-access:'+uid,JSON.stringify({decision:decision,at:Date.now()}));}
+function rememberedAccess(uid){try{const v=JSON.parse(lsGet('kenj-access:'+uid)||'null');return v&&v.decision;}catch(e){return null;}}
+function accessGate(){
+  if(S.gate==='checking') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Checking sign-in</h2><p class="muted">Lessons stay closed until we know who is signed in.</p></section>';
+  if(S.gate==='unverified') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Confirm your email</h2><p>Signed in as '+esc(S.teacherEmail)+'. This address is not confirmed yet, so the lessons stay closed. Open the confirmation message, then choose I have confirmed it.</p><div class="row"><button class="btn primary" type="button" data-act="send-verify">Send confirmation email</button><button class="btn" type="button" data-act="recheck-verify">I have confirmed it</button><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
+  if(S.gate==='pending') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Waiting for approval</h2><p>Signed in as '+esc(S.teacherEmail)+'. Mr. Kenj has not approved this account yet. You cannot approve yourself. The lessons stay closed.</p><div class="row"><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
+  if(S.gate==='revoked'||S.gate==='blocked') return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Access is closed</h2><p>'+(S.teacherEmail?'Signed in as '+esc(S.teacherEmail)+'. ':'')+'This account cannot open the lessons. If this is unexpected, ask Mr. Kenj.</p><div class="row"><button class="btn" type="button" data-act="level-sign-out">Sign out</button></div></section>';
+  if(S.gate==='signed-out'||!S.fb) return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Sign in</h2><p>Only students Mr. Kenj has approved can study here. Sign in with the email and password for this app.</p>'+signInFields()+'</section>';
+  return '<section class="panel" id="access-gate"><h2 style="font-size:24px">Sign-in is unavailable</h2><p class="muted">The lessons stay closed because access could not be checked. Try again when you are online.</p></section>';
+}
+function signInFields(){
+  return '<form id="level-teacher-form" class="grid" style="gap:8px;margin-top:8px"><div class="field"><label for="teacher-email">Email</label><input type="email" id="teacher-email" autocomplete="username" required></div><div class="field"><label for="teacher-password">Password</label><input type="password" id="teacher-password" autocomplete="current-password" required></div><p class="feedback bad" id="level-teacher-error" hidden></p><div><button class="btn primary" type="submit">Sign in</button></div><p class="small muted" style="margin:0">The password is sent to the sign-in service and is not stored in this app.</p></form>';
+}
 function render(){
-  renderTabs();renderChips();
   const m=$('#main');
+  if(!studyAllowed()){
+    $('#tabs').innerHTML='';
+    $('#chips').innerHTML='';
+    if(S.game){S.game=null;clearInterval(matchTimer);}
+    m.innerHTML=accessGate();
+    return;
+  }
+  renderTabs();renderChips();
   if(S.game&&!gameAllowed(S.game)){S.game=null;clearInterval(matchTimer);}
   if(S.game){m.innerHTML=accessBanner()+renderGame();afterGameRender();return;}
   let html=accessBanner();
@@ -1498,7 +1589,9 @@ document.addEventListener('click',async e=>{
     const base=st.locks||KenjLevelAccess.emptyLocks();
     saveLevelLocks(KenjLevelAccess.toggleLock(base,t.dataset.l,!base[t.dataset.l]));
     return;}
-  if(a==='level-sign-out'){S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='level-sign-out'){S.testGate=false;S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';S.gate='signed-out';stopAccessWatch();bindFirebaseProgress(null);if(S.fb)S.fb.signOut(S.fb.auth).catch(()=>{});render();return;}
+  if(a==='approve-student'){setStudentGrant(t.dataset.uid,'approved');return;}
+  if(a==='revoke-student'){setStudentGrant(t.dataset.uid,'revoked');return;}
   if(a==='send-verify'){
     const user=S.fb&&S.fb.auth&&S.fb.auth.currentUser;
     if(!user||!S.fb.sendVerification){toast('Sign in again before sending the confirmation email.');return;}
@@ -1585,7 +1678,16 @@ function installTestHook(){
     applyRemote(data){const r=S.accessCtl.applySnapshot(data,Date.now());onAccessChanged();return r;},
     applyMissing(){const r=S.accessCtl.applyMissing(Date.now());onAccessChanged();return r;},
     applyError(err){S.accessCtl.applyError(err||{code:'test'},Date.now());onAccessChanged();},
-    configure(){if(accessUnsub){accessUnsub();accessUnsub=null;}S.accessCfg={configured:true,reason:'ready',teacherEmails:['teacher@example.com']};S.accessCtl.noteConfigured();S.testMemory=true;lsSet(KenjLevelAccess.FLAG_KEY,'1');listenTestChannel();render();},
+    configure(){if(accessUnsub){accessUnsub();accessUnsub=null;}S.testGate=true;S.gate='approved';bindFirebaseProgress('test-student');S.accessCfg={configured:true,reason:'ready',teacherEmails:['teacher@example.com']};S.accessCtl.noteConfigured();S.testMemory=true;lsSet(KenjLevelAccess.FLAG_KEY,'1');listenTestChannel();render();},
+    setAccess(kind,uid){
+      S.testGate=true;S.gate=kind;S.game=null;
+      if(kind==='signed-out'||kind==='checking'||kind==='blocked'){bindFirebaseProgress(null);S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='';}
+      else if(kind==='teacher'){bindFirebaseProgress(uid||'teacher-test');S.levelTeacher=true;S.teacherUnverified=false;S.teacherEmail='tchmk9@gmail.com';}
+      else if(kind==='unverified'){bindFirebaseProgress(uid||'student-test');S.levelTeacher=false;S.teacherUnverified=true;S.teacherEmail='student@school.test';}
+      else{bindFirebaseProgress(uid||'student-test');S.levelTeacher=false;S.teacherUnverified=false;S.teacherEmail='student@school.test';}
+      if(kind==='revoked') rememberAccess(S.fbUid,'revoked');
+      render();
+    },
     signIn(){if(!S.testMemory)return;S.levelTeacher=true;S.teacherEmail='teacher@example.com';render();},
     seedProgress(partial){partial=partial||{};if(partial.scores)Object.assign(S.prog.scores,partial.scores);if(partial.cards)Object.assign(S.prog.cards,partial.cards);if(partial.xp!=null)S.prog.xp=partial.xp;save();render();},
     showHomework(lessonId){S.assignments=[{id:'hw1',title:'Workbook page',lesson:lessonId,due:'',details:''}];S.db=S.db||{collection:function(){return {onSnapshot:function(){return function(){};}};},doc:function(){return {};}};location.hash='homework';},
