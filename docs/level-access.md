@@ -1,6 +1,6 @@
 # Level locks
 
-One set of level locks applies to every student. There is no separate setting per class or per student. Levels A, B and C can be locked or opened on their own. Locking a level does not delete saved words, scores or points. Passing a lesson does not open a locked level.
+There is one set of class level locks, and each student can also be given their own locks in their control panel (see below). Levels A, B and C can be locked or opened on their own. Locking a level does not delete saved words, scores or points. Passing a lesson does not open a locked level.
 
 This page is a public web app. A lock closes that level inside the app. It does not stop someone from reading `index.html`, so it is not a copy-protection system.
 
@@ -25,7 +25,7 @@ Opening the page does not prove a teacher can write. That needs the verified tea
 | Connected, but this device has never received a document, and the read fails | Lessons stay available on this device until the first successful check. A banner explains that. The class document is not changed. |
 | Page is still loading the settings file | Level screens stay closed for that short wait, so a slow connection cannot skip a lock. |
 
-Factory default for a new document: A open, B open, C open (`locks` values `false`). The owner can lock any combination after signing in. There is no per-student override.
+Factory default for a new document: A open, B open, C open (`locks` values `false`). The owner can lock any combination after signing in.
 
 ## How a lock is enforced
 
@@ -105,3 +105,12 @@ npm run test:browser
 | Teacher sign-in and shared updates | Email and password, and only a verified `tchmk9@gmail.com` can write | The teacher still has to confirm the address and sign in |
 | Security rules | Verified email, and `updatedBy` must match that address | Published to this project separately from this repository |
 | GitHub Pages build | Static files, including the web settings | The public URL is the Pages site for this repository, after this release is published |
+
+## Locks for one student
+
+On the Teacher tab, choose **Open control panel** next to a student. Under **Levels**:
+
+- **Same as class** (the default): the student follows the class switches above.
+- **Own settings**: the student gets their own three switches, starting from the current class settings. From then on the class switches no longer change that student. Choose **Same as class** again to return them to the class switches.
+
+The student's own switches are stored on their grant, `accessGrants/{uid}`, as `locks` (`true` means locked), next to `status`. Only the verified teacher can write a grant, and a student can read only their own. A student with their own locks sees "Mr. Kenj has closed this level for you" instead of "for every student". The last own locks a device received are kept on that device, so a failed reload does not open a level.
